@@ -62,18 +62,20 @@ This is a file in which we can store sql information to load the base queries in
 
 example : data.sql
 
-                create table PERSON
-                (
-                ID INTEGER not null,
-                NAME VARCHAR(255) not null,
-                LOCATION VARCHAR(255),
-                BIRTH_DATE timestamp,
-                primary key(id)
-                );
+``` sql
+create table PERSON
+(
+ID INTEGER not null,
+NAME VARCHAR(255) not null,
+LOCATION VARCHAR(255),
+BIRTH_DATE timestamp,
+primary key(id)
+);
 
-                INSERT INTO PERSON (ID, NAME, LOCATION, BIRTH_DATE) VALUES (10001, 'Andres', 'Medellin', sysdate());
-                INSERT INTO PERSON (ID, NAME, LOCATION, BIRTH_DATE) VALUES (10002, 'Felipe', 'Medellin', sysdate());
-                INSERT INTO PERSON (ID, NAME, LOCATION, BIRTH_DATE) VALUES (10003, 'Pablo', 'Medellin', sysdate());
+INSERT INTO PERSON (ID, NAME, LOCATION, BIRTH_DATE) VALUES (10001, 'Andres', 'Medellin', sysdate());
+INSERT INTO PERSON (ID, NAME, LOCATION, BIRTH_DATE) VALUES (10002, 'Felipe', 'Medellin', sysdate());
+INSERT INTO PERSON (ID, NAME, LOCATION, BIRTH_DATE) VALUES (10003, 'Pablo', 'Medellin', sysdate());
+```
 
 # Spring JDBC
 
@@ -97,13 +99,15 @@ Jdbc Template is a class provided by Spring that help us to configure automatica
 
 ## Creating Dao Jdbc Template
 
-                @Repository
-                public class PersonJdbcDao {
+```java
+@Repository
+public class PersonJdbcDao {
 
-                        @Autowired
-                        JdbcTemplate jdbcTemplate;
+        @Autowired
+        JdbcTemplate jdbcTemplate;
 
-                }
+}
+```
 
 In the previous code there is a basic Dao using Jdbc Template, we have to check two facts.
 
@@ -124,7 +128,21 @@ The previous code is going to return all the people that were inserted in the da
 
 2. The BeanPropertyRowMapper is used when the atributes in your class are exactly the same that the atributes in the table, that means that Person(Object) and person(table) have the same atributes.
  
+## FindById
 
+
+```java
+public Person findById(Integer id) {
+        return jdbcTemplate.queryForObject
+                ("select * from person p where p.id = ?",
+                        new Object[]{id},
+                        new personRowMapper());
+}
+```
+
+The previous code is going to return the information of a person fiiltering by id.
+
+1. To retrieve one person we need to use the "query" method of the JdbcTemplate and also a sql 
 
 # Spring Cloud
 
