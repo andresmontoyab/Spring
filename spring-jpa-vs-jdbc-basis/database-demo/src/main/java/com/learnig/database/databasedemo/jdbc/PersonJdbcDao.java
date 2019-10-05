@@ -1,6 +1,6 @@
 package com.learnig.database.databasedemo.jdbc;
 
-import com.learnig.database.databasedemo.entity.Person;
+import com.learnig.database.databasedemo.jdbc.entity.Person;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -16,8 +16,7 @@ import java.util.List;
 public class PersonJdbcDao {
 
     @Autowired
-    JdbcTemplate jdbcTemplate; // Give Sprint us the connection
-
+    JdbcTemplate jdbcTemplate;
 
     public List<Person> findAll() {
         return jdbcTemplate.query("select * from person",
@@ -33,7 +32,6 @@ public class PersonJdbcDao {
 
     public Integer deleteById(Integer id) {
         return jdbcTemplate.update("delete from person p where p.id = ?", id);
-        // todo update method return an int, the num of row that were affected.
     }
 
     public Integer insert(Person person) {

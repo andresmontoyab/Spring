@@ -1,4 +1,4 @@
-package com.learnig.database.databasedemo.entity;
+package com.learnig.database.databasedemo.jdbc.entity;
 
 import java.util.Date;
 

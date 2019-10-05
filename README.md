@@ -8,6 +8,12 @@
         * [Spring JDBC vs JDBC](#Spring-JDBC-vs-JDBC)
         * [Jdbc Template](#Jdbc-Template)
             * [Creating Dao Jdbc Template](#Creating-Dao-Jdbc-Template)
+            * [FindAll Jdbc](#FindAll-Jdbc)
+            * [FindById Jdbc](#FindById-Jdbc)
+            * [DeleteById Jdbc](#DeleteById-Jdbc)
+            * [Insert Jdbc](#Insert-Jdbc)
+            * [Update Jdbc](#Update-Jdbc)
+    * [Spring JPA](#Spring-JPA)
 * [Spring Cloud](#Spring-Cloud)
     * [Microservice](#Microservice)
     * [Creating Microservices](#Creating-Microservices)
@@ -99,6 +105,8 @@ Jdbc Template is a class provided by Spring that help us to configure automatica
 
 ## Creating Dao Jdbc Template
 
+In the next code there is a basic Dao using Jdbc Template
+
 ```java
 @Repository
 public class PersonJdbcDao {
@@ -109,27 +117,28 @@ public class PersonJdbcDao {
 }
 ```
 
-In the previous code there is a basic Dao using Jdbc Template, we have to check two facts.
-
 1. The class is marked as @Repository that means that Spring is going to know that this class is needed and spring is going to create an instance of this class. Also @Repository means that this class is related with the database comunication.
 
 2. The JdbcTemplate is injected in the class, this class is autoconfigured by Spring and give us the connection and some methods to run SQL queries, as you are going to see in the next examples.
 
-## FindAll
+## FindAll Jdbc
 
-                public List<Person> findAll() {
-                        return jdbcTemplate.query("select * from person",
-                                new BeanPropertyRowMapper<Person>(Person.class));
-                }
+The next code is going to return all the people that were inserted in the database.
 
-The previous code is going to return all the people that were inserted in the database.
+``` java
+public List<Person> findAll() {
+        return jdbcTemplate.query("select * from person",
+                new BeanPropertyRowMapper<Person>(Person.class));
+}
+```
 
 1. To retrieve all the people jdbc use the method "query" plus a sql staetment.
 
 2. The BeanPropertyRowMapper is used when the atributes in your class are exactly the same that the atributes in the table, that means that Person(Object) and person(table) have the same atributes.
  
-## FindById
+## FindById Jdbc
 
+The next code is going to return the information of a person fiiltering by id.
 
 ```java
 public Person findById(Integer id) {
@@ -138,11 +147,85 @@ public Person findById(Integer id) {
                         new Object[]{id},
                         new personRowMapper());
 }
+
+class personRowMapper implements RowMapper<Person> {
+        @Override
+        public Person mapRow(ResultSet resultSet, int i) throws SQLException {
+            Person person = new Person();
+            person.setId(resultSet.getInt("id"));
+            person.setName(resultSet.getString("name"));
+            person.setLocation(resultSet.getString("location"));
+            person.setBirthDate(resultSet.getTimestamp("birth_date"));
+            return person;
+        }
+}
 ```
 
-The previous code is going to return the information of a person fiiltering by id.
+1. To retrieve one person we need to use the "queryForObject" method of the JdbcTemplate and also a sql 
 
-1. To retrieve one person we need to use the "query" method of the JdbcTemplate and also a sql 
+2. There is a Object[] that is used to pass the parameters to the sql query.
+
+3. There is a RowMapper custom implementation that is used to map to the entity(This is very similar to the BeanPropertyRowMapper, with the main difference that you can create a RowMapper)
+
+## DeleteById Jdbc
+
+``` java
+public Integer deleteById(Integer id) {
+        return jdbcTemplate.update("delete from person p where p.id = ?", id);
+}
+```
+
+1. To delete rows of the database we must use the method "update" plus a sql.
+
+2. The update method return the amount of rows that the execution affected.
+
+## Insert Jdbc
+
+The next code is going to insert one row in the database
+
+``` java
+public Integer insert(Person person) {
+        return jdbcTemplate.update(
+                "insert into person (id, name, location, birth_date)" +
+                        " values (?,?,?,?)",
+                        person.getId(),
+                        person.getName(),
+                        person.getLocation(),
+                        new Timestamp(person.getBirthDate().getTime()));
+}
+```
+
+1. Inserting information in the database require the method "update" plus a sql.
+
+2. We should send every single parameter that is require to the insertion.
+
+## Update Jdbc
+
+The next code is going to insert one row in the database
+
+``` java
+public Integer update(Person person) {
+        return jdbcTemplate.update(
+                "update person set name=?, location=?, birth_date=?" +
+                "where id = ?",
+                person.getName(),
+                person.getLocation(),
+                new Timestamp(person.getBirthDate().getTime()),
+                person.getId());
+}
+```
+
+1. Updating information in the database require the method "update" plus a sql.
+
+2. We should send every single parameter that is require to the insertion.
+
+All the previous methods are written in the database-demo project in the PersonJdbcDao class.
+
+# Spring JPA
+
+JPA is another approach when we are dealing with databases, the main difference is in a JPA approach we do not need to write sql code and all we have to do is write Java classes.
+
+JPA is a standard, the most famous implementation is Hibernate.
 
 # Spring Cloud
 
