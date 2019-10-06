@@ -36,6 +36,12 @@ public class SpringHibernateDepthApplication implements CommandLineRunner {
         logger.info("Saving Microservices Course: {}",
                 courseRepository.save(new Course("Microservices in 100 Steps")));
 
+        //Testing lastUpdatedDate and createdDate
+        logger.info("Testing last update and created date ");
+        Course datesTesting = courseRepository.findById(1001l);
+        datesTesting.setName("Testing Dates - Updated");
+        courseRepository.save(datesTesting);
+
 
     }
 }

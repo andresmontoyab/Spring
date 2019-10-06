@@ -72,4 +72,17 @@ public class CourseRepository {
         course.setName("New course Example - Updated");  // Because this is a transanction every single change in the app is going to update the database too, so is not require to call merge.
 
     }
+
+    /**
+     * JPQL Java Persistance Query Language
+     * Jpql is a way of write queries using entities.
+     */
+
+    /**
+     * NamedQueries help us to re use JQPL queries and those
+     * queries are written in the entitye
+     *
+     * 1. If you need to define one query use the @NamedQuery Annotations
+     * 2. If you need to define several queries use the @NamedQueries
+     */
 }
