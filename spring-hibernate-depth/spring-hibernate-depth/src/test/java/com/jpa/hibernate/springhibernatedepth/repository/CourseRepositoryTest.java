@@ -79,4 +79,9 @@ public class CourseRepositoryTest {
         assertEquals(id, finalCourseState.getId());
         assertEquals(initialState.getName(), finalCourseState.getName());
     }
+
+    @Test
+    public void playWithentityManagerTest() {
+        courseRepository.playWithEntityManager();
+    }
 }
