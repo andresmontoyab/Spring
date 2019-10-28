@@ -14,6 +14,20 @@
             * [Insert Jdbc](#Insert-Jdbc)
             * [Update Jdbc](#Update-Jdbc)
     * [Spring JPA](#Spring-JPA)
+        * [Basic Concepts](#Basic-Concepts)
+            * [ORM](#ORM)
+            * [Entities](#Entities)
+            * [Entities Manager](#Entities-Manager)
+                * [Persist](#persist)
+                * [Merge](#merge)
+                * [Remove](#remove)
+                * [Flush](#flush)
+                * [Detach](#detach)
+                * [Clear](#clear)
+                * [Refrest](#refresh)
+            * [Repository](#Repository)
+            * [JPQL](#JPQL)
+                * [Named Queries](#Named-Queries)
 * [Spring Cloud](#Spring-Cloud)
     * [Microservice](#Microservice)
     * [Creating Microservices](#Creating-Microservices)
@@ -226,6 +240,111 @@ All the previous methods are written in the database-demo project in the PersonJ
 JPA is another approach when we are dealing with databases, the main difference is in a JPA approach we do not need to write sql code and all we have to do is write Java classes.
 
 JPA is a standard, the most famous implementation is Hibernate.
+
+## Basic Concepts
+
+Those are the basics concepto require to understand how works the JPA approach.
+
+## ORM
+
+ORM stands for Object Relational Mapping and is an strategy used it to map information from the relational world like tables to the objectual world like objects. 
+
+## Entities
+
+The entities are the representation of the relational world in the objectual world.
+
+Example:
+
+Relational World.
+
+
+``` sql
+create table PERSON
+(
+    ID INTEGER not null,
+    NAME VARCHAR(255) not null,
+    LOCATION VARCHAR(255),
+    BIRTH_DATE timestamp,
+    primary key(id)
+);
+```
+
+Objectual World
+
+``` java
+package com.learnig.database.databasedemo.jpa.entity;
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.NamedQuery;
+import java.util.Date;
+
+@Entity
+@NamedQuery(name="find_all_students", query="Select s from Student s")
+public class Person {
+
+    @Id
+    @GeneratedValue
+    private int id;
+    private String name;
+    private String location;
+    private Date birthDate;
+
+    public Person() { // todo this is require
+    }
+
+    public Person(int id, String name, String location, Date birthDate) {
+        this.id = id;
+        this.name = name;
+        this.location = location;
+        this.birthDate = birthDate;
+    }
+
+    @Override
+    public String toString() {
+        return "Person{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", location='" + location + '\'' +
+                ", birthDate=" + birthDate +
+                '}';
+    }
+}
+```
+
+## Entity Manager
+
+Entity manager, manage the entities, that means all the operation that you need to perform in a specific session.
+
+```java
+   @PersistenceContext
+    EntityManager entityManager;
+```
+
+Some facts about the entity manager.
+
+1. If you're inside a transation and you're managing something with the entity manager, updating, adding, deleting that particular thing continue being managed by the entity manager until the end of the transaction.
+
+2. EntityManager is the interface of the persistence context.
+
+### persist.
+### merge.
+### remove.
+### flush.
+### detach.
+### clear.
+### refresh.
+
+## Repository
+
+The repository could be compare with a Dao class, in this class usually are created all the logic related with the database, like insertions or updates.
+
+The repository class uses the entityManager in order to handle all the operation with the database, also require to use the entity objects to create the relation with the specific tables.
+
+## JPQL 
+
+## Named Queries
 
 # Spring Cloud
 
