@@ -369,7 +369,14 @@ The repository class uses the entityManager in order to handle all the operation
 
 # Relation Ships
 
+In the relational world one of the most important concept is the "Relations" and basically means the way in which the tables are connected among them, so if we have two tables maybe
+we need information of both tables, for this reason we need to connec this tables with a relation, there different type of relations that we are going to see very soo.
+
 ## One To One
+
+The One to One relationship is when we have two tables and every single row of the table one, just map to one row of the table two.
+
+
 
 ## One to Many
 
