@@ -28,6 +28,10 @@
             * [Repository](#Repository)
             * [JPQL](#JPQL)
                 * [Named Queries](#Named-Queries)
+            * [Relation Ships](#Relation-Ships)
+                * [One To One](#One-To-One)
+                * [Many To One](#Many-To-One)
+                * [Many To Many](#Many-To-Many)
 * [Spring Cloud](#Spring-Cloud)
     * [Microservice](#Microservice)
     * [Creating Microservices](#Creating-Microservices)
@@ -69,12 +73,29 @@ When we finish the project setup we must download the project clicking in genera
 
 Also is require the next configuration
 
-                spring.h2.console.enabled=true
-                server.port = 9090
+```java
+spring.h2.console.enabled=true
+server.port = 9090
+```
 
 And with the next url we are able to open the h2 console.
 
-                http://localhost:9090/h2-console
+```java
+http://localhost:9090/h2-console
+```
+
+Also there are another few config that show us useful information about.
+
+```java
+# Turn statistics on
+spring.jpa.properties.hibernate.generate_statistics=true
+logging.level.org.hibernate.stat=debug
+
+# Show all queries
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+logging.level.org.hibernate.type=trace
+```
 
 ## data.sql
 
@@ -345,6 +366,14 @@ The repository class uses the entityManager in order to handle all the operation
 ## JPQL 
 
 ## Named Queries
+
+# Relation Ships
+
+## One To One
+
+## One to Many
+
+## Many to Many
 
 # Spring Cloud
 
