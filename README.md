@@ -367,6 +367,14 @@ The repository class uses the entityManager in order to handle all the operation
 
 ## Named Queries
 
+# Fetch
+
+## Lazy
+
+## Eager
+
+Any one to one relation ship is eager.
+
 # Relation Ships
 
 In the relational world one of the most important concept is the "Relations" and basically means the way in which the tables are connected among them, so if we have two tables maybe

@@ -2,6 +2,7 @@ package com.jpa.hibernate.springhibernatedepth;
 
 import com.jpa.hibernate.springhibernatedepth.entity.Course;
 import com.jpa.hibernate.springhibernatedepth.repository.CourseRepository;
+import com.jpa.hibernate.springhibernatedepth.repository.StudentRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,9 @@ public class SpringHibernateDepthApplication implements CommandLineRunner {
 
     @Autowired
     CourseRepository courseRepository;
+
+    @Autowired
+    StudentRepository studentRepository;
 
     public static void main(String[] args) {
         SpringApplication.run(SpringHibernateDepthApplication.class, args);
@@ -41,6 +45,9 @@ public class SpringHibernateDepthApplication implements CommandLineRunner {
         Course datesTesting = courseRepository.findById(1001l);
         datesTesting.setName("Testing Dates - Updated");
         courseRepository.save(datesTesting);
+
+        ///////************* Studen repo ************///////
+        studentRepository.saveStudentWithPassport();
 
 
     }

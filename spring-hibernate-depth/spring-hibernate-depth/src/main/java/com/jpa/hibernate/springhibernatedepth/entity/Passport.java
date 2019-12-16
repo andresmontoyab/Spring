@@ -16,6 +16,10 @@ public class Passport {
     protected Passport() {
     }
 
+    public Passport(String number) {
+        this.number = number;
+    }
+
     public Long getId() {
         return id;
     }
