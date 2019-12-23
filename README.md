@@ -28,10 +28,13 @@
             * [Repository](#Repository)
             * [JPQL](#JPQL)
                 * [Named Queries](#Named-Queries)
-            * [Relation Ships](#Relation-Ships)
-                * [One To One](#One-To-One)
-                * [Many To One](#Many-To-One)
-                * [Many To Many](#Many-To-Many)
+            * [Relationships](#Relat ionships)
+                * [One to One ](#One-To-One)
+                * [One to Many ](#One-To-Many)
+                * [Many to One ](#Many-To-One)
+                * [Fetching](#Fetching)
+					*[Lazy](#Lazy)
+					*[Eager](#Eager)
 * [Spring Cloud](#Spring-Cloud)
     * [Microservice](#Microservice)
     * [Creating Microservices](#Creating-Microservices)
@@ -350,7 +353,19 @@ Some facts about the entity manager.
 2. EntityManager is the interface of the persistence context.
 
 ### persist.
+
+Persist create a new Object in the database.
+
+```java
+Course course = new Course("New course Example");
+entityManager.persist(course);          // Create new Object in the DB
+```
+
 ### merge.
+
+Merge method update an specific object in the database.
+
+
 ### remove.
 ### flush.
 ### detach.
@@ -363,32 +378,126 @@ The repository could be compare with a Dao class, in this class usually are crea
 
 The repository class uses the entityManager in order to handle all the operation with the database, also require to use the entity objects to create the relation with the specific tables.
 
+The next example is a basic repository class.
+
+```java
+@Repository
+@Transactional
+public class CourseRepository {
+
+    @Autowired
+    EntityManager entityManager;
+}
+```
+
 ## JPQL 
+
+Java Persistance Query Language, is a way of write queries using entities.
+
+```java
+String jpql = "Select c from Course c";
+Query query = entityManager.createQuery(jpql);
+return (ArrayList) query.getResultList();
+```
+
+In the previous example we used the entity manager as usual and also we define the Select jpql query in order to retrieve all the courses from the database.
 
 ## Named Queries
 
-# Fetch
+Named Queries is a way to re use JPQL queries.
 
-## Lazy
+To define a NamedQueries we have to follow the next steps:
 
-## Eager
+1. Go to the entity.
+2. Create the Query in the top
+3. If you want to create more than one NamedQuery you must use the annotation NamedQueries.
 
-Any one to one relation ship is eager.
+Example Named Query:
 
-# Relation Ships
+```java
+@NamedQuery(name="query_get_all_courses", query="Select c from Course c"),
+```
 
-In the relational world one of the most important concept is the "Relations" and basically means the way in which the tables are connected among them, so if we have two tables maybe
-we need information of both tables, for this reason we need to connec this tables with a relation, there different type of relations that we are going to see very soo.
+Example NamedQueries
+
+```java
+@NamedQueries(value = {
+        @NamedQuery(name="query_get_all_courses", query="Select c from Course c"),
+        @NamedQuery(name="query_get_all_courses_copy", query="Select c from Course c")
+})
+```
+
+To call a NamedQuery you should only use the entity manager's method createNamedQuery with the name of the QueryMethod.
+
+```java
+    public List<Course> selectWithJPQL() {
+        String jpql = "Select c from Course c";
+        Query query = entityManager.createNamedQuery("query_get_all_courses");
+        return (ArrayList) query.getResultList();
+    }
+```
+
+## Relationships
+
+When we are using relational database is very common that among tables exist some relations, for instances if we have two tables Student and Course, this both table are related in some way, the most common relation is that a student can have multiple courses and also a course can have multiple students,  in this example the relationship between these tables is ManyToMany. In the next steps we are going to see the different kind of relationships and how to configure each one.
 
 ## One To One
 
-The One to One relationship is when we have two tables and every single row of the table one, just map to one row of the table two.
+When we are talking about OneToOne Relationship is when one row of the table 1 just map to one row of the table 2. For instance let's say that there are two tables Student and Passport, usually the student only have only one passport and also that specific passport is only related with one student, so the relation is going to be OneToOne.
 
+Steps to setup a OneToOne Relationship:
 
+1. Create Entity Student
 
-## One to Many
+2. Create Entity Passport
 
-## Many to Many
+3. Create the relationship using @OneToOne annotation.
+
+```java
+@Entity
+public class Student {
+
+    @Id
+    @GeneratedValue
+    private Long id;
+
+    private String name;
+
+    @OneToOne
+    private Passport passport;
+}
+```
+
+In the previous code the annotation @OneToOne is in the Student class, nevertheless is also posible to put the annotation in the Passport entity with the relation to the Student, even is posible to put it in both entities and that is called Bidirectional relationship.
+
+In the background the @OneToOne annotation is going to create in the entity a relation with another entity that relation is called foreign key.
+
+4. Using relationship in Repository. 
+
+```java
+public void saveStudentWithPassport() {
+        Passport passport = new Passport("z1234");
+        entityManager.persist(passport);
+        Student student = new Student("Andres New Course");
+        student.setPassport(passport);
+        entityManager.persist(student);
+    }
+```
+
+As you can see in the previous code there is a dependency in the Entities, If you use persist(student) without previously use persist(passport) the application is going to fail., because you require a passport already inserted in the database to be able to map it in the student entity. So please be aware of the order of insertion.
+
+## Fetching
+
+When we are using Jpa-Hibernate there is a very concept that is called fetching and basically means when and how the information is loaded from the database. For instance if we have a relationship between two tables and we want to retrieve all the info of the table and also all the info of the sub-tables only calling a findBy of the main entity is going to loaded all the info of the sub-entities but we can setup this behaviour.
+
+### Lazy
+
+If we setup the relationship as lazy the information of the sub-entities is going to be loaded only when is really require it.
+
+### Eager
+
+If we setup the relationship as eager the information of the sub-entities and the main entity are going to be loaded all together.
+
 
 # Spring Cloud
 
