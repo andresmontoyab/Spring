@@ -2,6 +2,8 @@ package com.jpa.hibernate.springhibernatedepth;
 
 import com.jpa.hibernate.springhibernatedepth.entity.Course;
 import com.jpa.hibernate.springhibernatedepth.repository.CourseRepository;
+import com.jpa.hibernate.springhibernatedepth.repository.StudentRepository;
+import com.jpa.hibernate.springhibernatedepth.service.ServiceMock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +19,12 @@ public class SpringHibernateDepthApplication implements CommandLineRunner {
 
     @Autowired
     CourseRepository courseRepository;
+
+    @Autowired
+    StudentRepository studentRepository;
+
+    @Autowired
+    ServiceMock serviceMock;
 
     public static void main(String[] args) {
         SpringApplication.run(SpringHibernateDepthApplication.class, args);
@@ -41,6 +49,15 @@ public class SpringHibernateDepthApplication implements CommandLineRunner {
         Course datesTesting = courseRepository.findById(1001l);
         datesTesting.setName("Testing Dates - Updated");
         courseRepository.save(datesTesting);
+
+        logger.info("Testing select all with JPQL");
+        courseRepository.selectWithJPQL().forEach((courseByJPQL) -> System.out.println(courseByJPQL));
+
+        logger.info("*****************//// Begin to test Relationships //////////***************");
+        studentRepository.saveStudentWithPassport();
+
+        logger.info("Calling Service Mock");
+      //  serviceMock.getRootResource();
 
 
     }
