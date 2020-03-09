@@ -3,7 +3,6 @@ package com.jpa.hibernate.springhibernatedepth;
 import com.jpa.hibernate.springhibernatedepth.entity.Course;
 import com.jpa.hibernate.springhibernatedepth.repository.CourseRepository;
 import com.jpa.hibernate.springhibernatedepth.repository.StudentRepository;
-import com.jpa.hibernate.springhibernatedepth.service.ServiceMock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,9 +21,6 @@ public class SpringHibernateDepthApplication implements CommandLineRunner {
 
     @Autowired
     StudentRepository studentRepository;
-
-    @Autowired
-    ServiceMock serviceMock;
 
     public static void main(String[] args) {
         SpringApplication.run(SpringHibernateDepthApplication.class, args);
@@ -57,7 +53,6 @@ public class SpringHibernateDepthApplication implements CommandLineRunner {
         studentRepository.saveStudentWithPassport();
 
         logger.info("Calling Service Mock");
-      //  serviceMock.getRootResource();
 
 
     }
