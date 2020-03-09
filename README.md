@@ -28,11 +28,13 @@
             * [Repository](#Repository)
             * [JPQL](#JPQL)
                 * [Named Queries](#Named-Queries)
-            * [Relationships](#Relat ionships)
+            * [Relationships](#Relationships)
                 * [One to One ](#One-To-One)
                 * [One to Many ](#One-To-Many)
                 * [Many to One ](#Many-To-One)
                 * [Fetching](#Fetching)
+				    *[Lazy](#Lazy)
+				    *[Eager](#Eager)
 * [Spring Cloud](#Spring-Cloud)
     * [Microservice](#Microservice)
     * [Creating Microservices](#Creating-Microservices)
@@ -74,12 +76,29 @@ When we finish the project setup we must download the project clicking in genera
 
 Also is require the next configuration
 
-                spring.h2.console.enabled=true
-                server.port = 9090
+```java
+spring.h2.console.enabled=true
+server.port = 9090
+```
 
 And with the next url we are able to open the h2 console.
 
-                http://localhost:9090/h2-console
+```java
+http://localhost:9090/h2-console
+```
+
+Also there are another few config that show us useful information about.
+
+```java
+# Turn statistics on
+spring.jpa.properties.hibernate.generate_statistics=true
+logging.level.org.hibernate.stat=debug
+
+# Show all queries
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+logging.level.org.hibernate.type=trace
+```
 
 ## data.sql
 
@@ -345,6 +364,8 @@ entityManager.persist(course);          // Create new Object in the DB
 ### merge.
 
 Merge method update an specific object in the database.
+
+
 ### remove.
 ### flush.
 ### detach.
@@ -355,7 +376,7 @@ Merge method update an specific object in the database.
 
 The repository could be compare with a Dao class, in this class usually are created all the logic related with the database, like insertions or updates.
 
-The repository class uses the entityManager in order to handle all the operation with the database,also require to use the entity objects to create the relation with the specific tables.
+The repository class uses the entityManager in order to handle all the operation with the database, also require to use the entity objects to create the relation with the specific tables.
 
 The next example is a basic repository class.
 
@@ -368,6 +389,7 @@ public class CourseRepository {
     EntityManager entityManager;
 }
 ```
+
 ## JPQL 
 
 Java Persistance Query Language, is a way of write queries using entities.
