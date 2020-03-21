@@ -6,10 +6,13 @@ import org.springframework.data.annotation.CreatedDate;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.ManyToMany;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToOne;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 public class Student {
@@ -22,6 +25,9 @@ public class Student {
 
     @OneToOne
     private Passport passport;
+
+    @ManyToMany
+    private List<Course> courses = new ArrayList<>();
 
     protected Student() {
     }

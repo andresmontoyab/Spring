@@ -31,7 +31,7 @@
             * [Relationships](#Relationships)
                 * [One to One ](#One-To-One)
                 * [One to Many ](#One-To-Many)
-                * [Many to One ](#Many-To-One)
+                * [Many to Many](#Many-To-Many)
                 * [Fetching](#Fetching)
                     * [Lazy](#Lazy)
 				    * [Eager](#Eager)
@@ -618,6 +618,66 @@ In order to delete one row of the OneToMany relationship we can follow the next 
         logger.info("course.getReviews -> {}", course.getReviews());
     }
  ```
+ 
+## Many To Many
+
+Many to Many is the most complex relationship in the relational world, and basically is when both tables can have multiples
+related rows in the other table, for instance, let's say that we have two entities courses and students.
+
+* As we may know one course can have multiple students, right?, also one students could be attending multiple courses.
+
+* In the above case the relationship between course and student tables are many to many.
+
+* The proper way to handle this kind of relationship is creating something called "Join Tables". Join Tables means a table
+that is created only with the ids of the main tables, for instance (JoinTableName -> Course_Student with columns student_id and
+course_id) and in this way we break the Many to Many relationship into two one to many relationship.
+
+### Tables with Many to Many RelationShip
+
+![](https://github.com/andresmontoyab/Spring/blob/master/resources/many-to-many.PNG)
+
+### Tables with join table
+
+![](https://github.com/andresmontoyab/Spring/blob/master/resources/many-to-many-join-table.JPG)
+
+Steps to setup the many to many relationship.
+
+1. Put the @ManyToMany annotation in both entities.
+
+With this step is enough, nevertheless there is something wrong, if we run the application we noticed that hibernate created
+two join table course_student and student_course the reason is because both entities have the @ManyToMany and there's no any owner of
+the relationship. In order to fix that once more time we use the mappedBy atribute.
+
+2. Use the mappedBy atribbute in the owner of the relationship.
+
+Example:
+
+ ```java
+public class Course {
+
+    @Id
+    @GeneratedValue
+    private Long id;
+
+    private String name;
+
+    @ManyToMany(mappedBy = "courses")
+    private List<Student> students = new ArrayList<>();
+}
+
+
+public class Student {
+
+    @Id
+    @GeneratedValue
+    private Long id;
+
+    private String name;
+
+    @ManyToMany
+    private List<Course> courses = new ArrayList<>();
+}
+ ```
 
 ## Fetching
 
@@ -671,7 +731,7 @@ Dependencies for the Microservices
 
 Spring Cloud Config server is a tool that let us save all the properties for the microservices, with this server we can also have the properties for each environment like dev,qa,stage and prod.
 
-![](https://github.com/andresmontoyab/SpringCloud/blob/master/resources/spring-cloud-config-server-diagram.JPG)
+![](https://github.com/andresmontoyab/Spring/blob/master/resources/spring-cloud-config-server-diagram.JPG)
 
 ## Create Config Server
 
