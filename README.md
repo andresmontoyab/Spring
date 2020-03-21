@@ -163,7 +163,7 @@ public class PersonJdbcDao {
 
 The next code is going to return all the people that were inserted in the database.
 
-``` java
+```java
 public List<Person> findAll() {
         return jdbcTemplate.query("select * from person",
                 new BeanPropertyRowMapper<Person>(Person.class));
@@ -207,7 +207,7 @@ class personRowMapper implements RowMapper<Person> {
 
 ## DeleteById Jdbc
 
-``` java
+```java
 public Integer deleteById(Integer id) {
         return jdbcTemplate.update("delete from person p where p.id = ?", id);
 }
@@ -221,7 +221,7 @@ public Integer deleteById(Integer id) {
 
 The next code is going to insert one row in the database
 
-``` java
+```java
 public Integer insert(Person person) {
         return jdbcTemplate.update(
                 "insert into person (id, name, location, birth_date)" +
@@ -241,7 +241,7 @@ public Integer insert(Person person) {
 
 The next code is going to insert one row in the database
 
-``` java
+```java
 public Integer update(Person person) {
         return jdbcTemplate.update(
                 "update person set name=?, location=?, birth_date=?" +
@@ -282,7 +282,7 @@ Example:
 Relational World.
 
 
-``` sql
+```sql
 create table PERSON
 (
     ID INTEGER not null,
@@ -295,7 +295,7 @@ create table PERSON
 
 Objectual World
 
-``` java
+```java
 package com.learnig.database.databasedemo.jpa.entity;
 
 import javax.persistence.Entity;
@@ -365,12 +365,32 @@ entityManager.persist(course);          // Create new Object in the DB
 
 Merge method update an specific object in the database.
 
-
 ### remove.
+
+The remove method is used to delete an specific object in the database.
+
 ### flush.
+
+The method flus is going to sabe all the information or commit all operation until that specific point.
+
 ### detach.
+
+The detach(Object o) method help us to remove the track of a certain object, if we detach one object the 
+entity manager is not going to manage that object anymore.
+
 ### clear.
+
+The clear() method clean all the operation until that point, for example if we do not add any flush() 
+and use clear, nothing in the db is going to be updated because is a transanction.
+
 ### refresh.
+
+The refresh() method help us to recovery the entity information from the DB.
+
+Example step1: persist(), step2: flush(), step3, setValue(), step4 refresh()
+
+If the refresh method is delete it the final info in the db is going to be the info
+in the setValue, but because we are using the refresh the final info is the original.
 
 ## Repository
 
@@ -561,15 +581,17 @@ After all of this we must create the properties file which are going to have the
 
 5. Enable config server 
 
-        @EnableConfigServer
-        @SpringBootApplication
-        public class SpringCloudConfigServerApplication {
+```java
+@EnableConfigServer
+@SpringBootApplication
+public class SpringCloudConfigServerApplication {
 
-            public static void main(String[] args) {
-                SpringApplication.run(SpringCloudConfigServerApplication.class, args);
-            }
+    public static void main(String[] args) {
+        SpringApplication.run(SpringCloudConfigServerApplication.class, args);
+    }
 
-        }
+}
+```
 
 6. Run the application
 
@@ -610,17 +632,19 @@ As you may notices when we are talking about microservices, we need to call seve
 ## Rest Template
 
 Rest template is a tool that let us call other REST service.
+```java
+Map<String, String> uriVariables = new HashMap<>();
+        uriVariables.put("from", from);
+        uriVariables.put("to", to);
 
-                Map<String, String> uriVariables = new HashMap<>();
-                        uriVariables.put("from", from);
-                        uriVariables.put("to", to);
+ResponseEntity<CurrencyConversion> responseEntity = new RestTemplate().getForEntity(
+                "http://localhost:8001/currency-exchange/from/{from}/to/{to}",
+                CurrencyConversion.class,
+                uriVariables);
 
-                ResponseEntity<CurrencyConversion> responseEntity = new RestTemplate().getForEntity(
-                                "http://localhost:8001/currency-exchange/from/{from}/to/{to}",
-                                CurrencyConversion.class,
-                                uriVariables);
-
-                CurrencyConversion response = responseEntity.getBody();
+CurrencyConversion response = responseEntity.getBody();
+```
+                
 
 In the previous example we had the next steps.
 
@@ -636,36 +660,40 @@ In the previous example we had the next steps.
 
 1. Add dependency in pom
 
-                <dependency>
+        <dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-feign</artifactId>
 		</dependency>
 
 2. Enable Feign Client
 
-                @EnableFeignClients("com.microservices.currencyconversionservice")
+```java
+@EnableFeignClients("com.microservices.currencyconversionservice")
+```
 
 Where the "com.microservices.currencyconversionservice" is the package that we need to scan      
 
 3. Create Interface with @FeignClient
 
-                @FeignClient(name="currency-exchange-service", url="localhost:8001")
-                public interface CurrencyExchangeServiceProxy {
+```java
+@FeignClient(name="currency-exchange-service", url="localhost:8001")
+public interface CurrencyExchangeServiceProxy {
 
-                @GetMapping("/currency-exchange/from/{from}/to/{to}")
-                public CurrencyConversion retrieveExchangeValue(@RequestParam("from") String from, @RequestParam("to")String to);
+@GetMapping("/currency-exchange/from/{from}/to/{to}")
+public CurrencyConversion retrieveExchangeValue(@RequestParam("from") String from, @RequestParam("to")String to);
 
-                }
+}
+```
 
 In this interface you are going to put abstract methods in which you put the URL, parameters and also return type. One important thing to highlight is that you must use @RequesParam("parameter_name").
 
 4. Use the proxy.
+```java
+@Autowired
+CurrencyExchangeServiceProxy currencyExchangeServiceProxy;
 
-                @Autowired
-                CurrencyExchangeServiceProxy currencyExchangeServiceProxy;
-
-                CurrencyConversion response = currencyExchangeServiceProxy.retrieveExchangeValue(from, to);
-
+CurrencyConversion response = currencyExchangeServiceProxy.retrieveExchangeValue(from, to);
+```
 # Client Side Load Balancing
 
 ## Ribbon & Feign
@@ -676,21 +704,23 @@ All the next changes need to be applied in the caller microservices(Client Side)
 
 1. Dependency.
 
-                <dependency>
+        <dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-netflix-ribbon</artifactId>
-		</dependency>
+        </dependency>
 
 2. Put @RibbonClient(name="currency-exchange-service") in our Proxy Interface
 
-                @FeignClient(name="currency-exchange-service")
-                @RibbonClient(name="currency-exchange-service")
-                public interface CurrencyExchangeServiceProxy {
+```java
+@FeignClient(name="currency-exchange-service")
+@RibbonClient(name="currency-exchange-service")
+public interface CurrencyExchangeServiceProxy {
 
-                @GetMapping("/currency-exchange/from/{from}/to/{to}")
-                public CurrencyConversion retrieveExchangeValue(@RequestParam("from") String from, @RequestParam("to")String to);
+@GetMapping("/currency-exchange/from/{from}/to/{to}")
+public CurrencyConversion retrieveExchangeValue(@RequestParam("from") String from, @RequestParam("to")String to);
 
                 }
+```
 
 First we must add the anotation @RibbonClient in our Proxy Feign Class, and also we must delete the url parameter in our @FeignClient anotation, as you can notice the Ribbon anotation is going to deal with the url of the service, because the main purpose of Ribbon is to distribute among several instances.
 
@@ -785,10 +815,10 @@ In order to launch a basic Eureka Server we need to set up some configuration in
 
 1. First in the microservices or project that we want to use the eureka services we must add the next dependency.
 
-                <dependency>
+        <dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
-		</dependency>
+        </dependency>
 
 2. Add in the microservices main class the @EnableDiscoveryClient anotation 
 
@@ -824,16 +854,18 @@ Often this function need to be intercepted to be proceced!.
 
 2. Config the main class with @EnableZuulProxy and @EnableDiscoveryClient
 
-                @EnableZuulProxy
-                @EnableDiscoveryClient
-                @SpringBootApplication
-                public class NetflixZuulApiGatewayServerApplication {
+```java
+@EnableZuulProxy
+@EnableDiscoveryClient
+@SpringBootApplication
+public class NetflixZuulApiGatewayServerApplication {
 
-                        public static void main(String[] args) {
-                                SpringApplication.run(NetflixZuulApiGatewayServerApplication.class, args);
-                        }
+        public static void main(String[] args) {
+                SpringApplication.run(NetflixZuulApiGatewayServerApplication.class, args);
+        }
 
-                }
+}
+```
 
 3. Config de properties file with require info
 
@@ -843,34 +875,36 @@ Often this function need to be intercepted to be proceced!.
 
 4. Create FilterClass
 
-                @Component
-                public class ZuulLoggingFilter extends ZuulFilter {
+```java
+@Component
+public class ZuulLoggingFilter extends ZuulFilter {
 
-                        private Logger logger = LoggerFactory.getLogger(this.getClass());
+        private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-                        @Override
-                        public String filterType() {
-                                return "pre";
-                        }
+        @Override
+        public String filterType() {
+                return "pre";
+        }
 
-                        @Override
-                        public int filterOrder() {
-                                return 1;
-                        }
+        @Override
+        public int filterOrder() {
+                return 1;
+        }
 
-                        @Override
-                        public boolean shouldFilter() {
-                                return true;
-                        }
+        @Override
+        public boolean shouldFilter() {
+                return true;
+        }
 
-                        @Override
-                        public Object run() throws ZuulException {
-                                HttpServletRequest request = RequestContext.getCurrentContext().getRequest();
-                                logger.info("request -> {} request uri -> {}", request, request.getRequestURI());
-                                return null;
-                        }
-                }
-
+        @Override
+        public Object run() throws ZuulException {
+                HttpServletRequest request = RequestContext.getCurrentContext().getRequest();
+                logger.info("request -> {} request uri -> {}", request, request.getRequestURI());
+                return null;
+        }
+}
+```
+                
 In the previous code we can notice the next things.
 
 * The Filter class must extend the Abstract Class ZuulFilter.
@@ -931,10 +965,12 @@ If we want to achieve a Distributed Tracing System we neeed to assing a unique i
 
 In our main class of the same microservices in where you put the previous dependency we need to create the next bean.
 
-                @Bean
-                public Sampler defaultSampler(){
-                        return Sampler.ALWAYS_SAMPLE;
-                }
+```java
+@Bean
+public Sampler defaultSampler(){
+        return Sampler.ALWAYS_SAMPLE;
+}
+```
 
 When you finish the previous two steps you can run all the application with the change and you are going to note that for all the new request of those microservices a new an unique request id will be create it with the purpose of trace each call.
 
@@ -995,16 +1031,18 @@ Mark the main class with the next annotation
 
 Set up the controller that depend of other services.
 
-
-                @GetMapping("/fault-tolerance-example")
-                        @HystrixCommand(fallbackMethod = "fallbackFaultToleranceExample")
-                        public CurrencyConversion faultToleranceExample() {
-                                throw new RuntimeException("Not Available");
-                        }
+```java
+@GetMapping("/fault-tolerance-example")
+        @HystrixCommand(fallbackMethod = "fallbackFaultToleranceExample")
+        public CurrencyConversion faultToleranceExample() {
+                throw new RuntimeException("Not Available");
+        }
+```
 
 4. Create the fallback method when something happen.
 
-
-                public CurrencyConversion fallbackFaultToleranceExample() {
-                        return new CurrencyConversion(1l, "USD", "IDR", BigDecimal.ONE, BigDecimal.TEN, BigDecimal.ZERO, 1 );
-                }
+```java
+public CurrencyConversion fallbackFaultToleranceExample() {
+        return new CurrencyConversion(1l, "USD", "IDR", BigDecimal.ONE, BigDecimal.TEN, BigDecimal.ZERO, 1 );
+}
+```
