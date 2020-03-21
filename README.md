@@ -638,7 +638,7 @@ course_id) and in this way we break the Many to Many relationship into two one t
 
 ### Tables with join table
 
-![](https://github.com/andresmontoyab/Spring/blob/master/resources/many-to-many-join-table.JPG)
+![](https://github.com/andresmontoyab/Spring/blob/master/resources/many-to-many-join-table.PNG)
 
 Steps to setup the many to many relationship.
 
