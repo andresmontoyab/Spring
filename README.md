@@ -678,6 +678,80 @@ public class Student {
     private List<Course> courses = new ArrayList<>();
 }
  ```
+ 
+```java
+ public class Course {
+ 
+     @Id
+     @GeneratedValue
+     private Long id;
+ 
+     private String name;
+ 
+     @ManyToMany(mappedBy = "courses")
+     private List<Student> students = new ArrayList<>();
+ }
+```
+
+Even that the above approach works there is a little problem, in term of design what happen if the join table or even the column names
+in the join table are already created an have different names that course_student, course_id, student_id, in order to solve that
+we can replace the mappenBy setup by the @JoinTable annotation and the result is pretty much the same.
+
+```java
+ public class Course {
+ 
+     @Id
+     @GeneratedValue
+     private Long id;
+ 
+     private String name;
+ 
+     @ManyToMany
+     @JoinTable(name="STUDENT_COURSE",
+     joinColumns = @JoinColumn(name = "STUDENT_ID"),
+     inverseJoinColumns = @JoinColumn(name = "COURSE_ID"))
+     private List<Student> students = new ArrayList<>();
+ }
+```
+ 
+ ## Adding course and Student 
+ 
+```java
+public class StudentRepository {
+    public void insertStudentAndCourse(){
+         // Create objects
+         Student student = new Student("Jack");
+         Course course = new Course("Microservices in 1000 steps");
+    
+         // Getting sequence from hibernate.
+         entityManager.persist(student);
+         entityManager.persist(course);
+    
+         // Setup relation
+         student.addCourse(course);
+         course.addStudent(student);
+    
+         // update the relation in db, in this point is when the record are going to be inserted by hibernate.
+         entityManager.persist(student);
+    
+         // only at the end hibernate is going to insert the records
+     }
+     
+    public void insertCourseToAStudent(Long id) {
+            Student student = entityManager.find(Student.class, id);
+            Course course = new Course("Trying to add a new course");
+            student.addCourse(course);
+            entityManager.persist(course);
+            entityManager.persist(student);
+        }
+}
+```
+
+As we see above, if we want to add record to the database when are relationship among the entities are require three steps:
+
+1. Create Object
+2. Setup relationship
+3. Persist all the object.(If you don't have any cascade configuration)
 
 ## Fetching
 
@@ -703,6 +777,10 @@ that by default those relationships have an specific fetch type
 @OneToMany  -> Lazy
 
 @ManyToMany -> Lazy
+
+## Cascade Types
+
+In order to know more about what is cascade you ca refer to the next link. https://howtodoinjava.com/hibernate/hibernate-jpa-cascade-types/
 
 # Spring Cloud
 

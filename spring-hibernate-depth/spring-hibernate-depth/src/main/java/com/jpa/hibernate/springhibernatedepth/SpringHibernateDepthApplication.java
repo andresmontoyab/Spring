@@ -60,5 +60,9 @@ public class SpringHibernateDepthApplication implements CommandLineRunner {
         logger.info("Deleting Review");
         courseRepository.deleteTheFirstReview();
 
+        logger.info("*****************//// Many to Many Relationship //////////***************");
+        studentRepository.insertStudentAndCourse();
+        studentRepository.insertCourseToAStudent(2001L);
+
     }
 }

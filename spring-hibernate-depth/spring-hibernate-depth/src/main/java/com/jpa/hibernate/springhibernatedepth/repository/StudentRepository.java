@@ -1,6 +1,7 @@
 package com.jpa.hibernate.springhibernatedepth.repository;
 
 
+import com.jpa.hibernate.springhibernatedepth.entity.Course;
 import com.jpa.hibernate.springhibernatedepth.entity.Passport;
 import com.jpa.hibernate.springhibernatedepth.entity.Student;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,8 +45,33 @@ public class StudentRepository {
         entityManager.clear();
         anotherStudent.setName("Another student - Updated");
         student.setName("New student Example - Updated");
-
     }
 
+    public void insertStudentAndCourse(){
+        // Create objects
+        Student student = new Student("Jack");
+        Course course = new Course("Microservices in 1000 steps");
+
+        // Getting sequence from hibernate.
+        entityManager.persist(student);
+        entityManager.persist(course);
+
+        // Setup relation
+        student.addCourse(course);
+        course.addStudent(student);
+
+        // update the relation in db, in this point is when the record are going to be inserted by hibernate.
+        entityManager.persist(student);
+
+        // only at the end hibernate is going to insert the records
+    }
+
+    public void insertCourseToAStudent(Long id) {
+        Student student = entityManager.find(Student.class, id);
+        Course course = new Course("Trying to add a new course");
+        student.addCourse(course);
+        entityManager.persist(course);
+        entityManager.persist(student);
+    }
 }
 
