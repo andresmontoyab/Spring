@@ -1,6 +1,9 @@
 package com.jpa.hibernate.springhibernatedepth.repository;
 
 import com.jpa.hibernate.springhibernatedepth.entity.Course;
+import com.jpa.hibernate.springhibernatedepth.entity.Review;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import javax.persistence.EntityManager;
@@ -11,10 +14,13 @@ import java.util.List;
 
 @Repository
 @Transactional
+
 public class CourseRepository {
 
     @Autowired
     EntityManager entityManager;
+
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public Course findById(Long id) {
         return entityManager.find(Course.class, id);
@@ -96,4 +102,33 @@ public class CourseRepository {
      * 1. If you need to define one query use the @NamedQuery Annotations
      * 2. If you need to define several queries use the @NamedQueries
      */
+
+    public void addReviewsForCourse() {
+        Course course = findById(1001L);
+        logger.info("course.getReviews -> {}", course.getReviews());
+        //Creating Reviews
+        Review review1 = new Review("5", "This one is a new description");
+        Review review2 = new Review("5", "and here we again.");
+
+        // Setting relationships
+        review1.setCourse(course);
+        course.addReview(review1);
+        course.addReview(review2);
+        review2.setCourse(course);
+
+        // Adding review to the db
+        entityManager.persist(review1);
+        entityManager.persist(review2);
+        logger.info("course.getReviews -> {}", course.getReviews());
+    }
+
+    public void deleteTheFirstReview() {
+        Course course = findById(1001L);
+        logger.info("course.getReviews -> {}", course.getReviews());
+        List<Review> reviews = course.getReviews();
+        Review review = reviews.get(0);
+        course.removeReview(review);
+        entityManager.merge(course);
+        logger.info("course.getReviews -> {}", course.getReviews());
+    }
 }

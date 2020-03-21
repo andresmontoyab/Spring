@@ -50,10 +50,15 @@ public class SpringHibernateDepthApplication implements CommandLineRunner {
         courseRepository.selectWithJPQL().forEach((courseByJPQL) -> System.out.println(courseByJPQL));
 
         logger.info("*****************//// Begin to test Relationships //////////***************");
+        logger.info("*****************//// One to One Relationship //////////***************");
         studentRepository.saveStudentWithPassport();
 
-        logger.info("Calling Service Mock");
 
+        logger.info("*****************//// Many to One Relationship //////////***************");
+        logger.info("Adding Review");
+        courseRepository.addReviewsForCourse();
+        logger.info("Deleting Review");
+        courseRepository.deleteTheFirstReview();
 
     }
 }

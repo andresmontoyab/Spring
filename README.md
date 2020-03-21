@@ -33,8 +33,9 @@
                 * [One to Many ](#One-To-Many)
                 * [Many to One ](#Many-To-One)
                 * [Fetching](#Fetching)
-				    *[Lazy](#Lazy)
-				    *[Eager](#Eager)
+                    * [Lazy](#Lazy)
+				    * [Eager](#Eager)
+				    * [Fetch By RelationShip](#Fetch-By-RelationShip)
 * [Spring Cloud](#Spring-Cloud)
     * [Microservice](#Microservice)
     * [Creating Microservices](#Creating-Microservices)
@@ -106,7 +107,7 @@ This is a file in which we can store sql information to load the base queries in
 
 example : data.sql
 
-``` sql
+```sql
 create table PERSON
 (
 ID INTEGER not null,
@@ -506,9 +507,121 @@ public void saveStudentWithPassport() {
 
 As you can see in the previous code there is a dependency in the Entities, If you use persist(student) without previously use persist(passport) the application is going to fail., because you require a passport already inserted in the database to be able to map it in the student entity. So please be aware of the order of insertion.
 
+## Many To One 
+
+When we are talking about Many to One or One To Many relationship basically means that the relation between table 1 to table 2 are 0...n rows and viceversa.
+So let's say that we have two entities Course and Review, one course could have more than one review.
+
+Steps to setup OneToMany / Many to One relationships
+
+1. First define in which table is going to be the reference.
+
+2. Add the anotation @ManyToOne in the entiy that has the reference.
+
+3. Add the anotation @OneToMany in the entity that does not have the reference
+
+4. Add the mappedBy atribute in the table that does not have the reference with the name value of the reference.
+
+Example.
+
+```java
+
+public class Review {
+
+    @Id
+    @GeneratedValue
+    private Long id;
+
+    @ManyToOne
+    private Course course;
+    
+    // constructors, getters and setters ....
+}
+
+public class Course {
+
+    @Id
+    @GeneratedValue
+    private Long id;
+
+    @OneToMany(mappedBy = "course") 
+    private List<Review> reviews = new ArrayList<>();
+
+    // constructors, getters and setters ....
+}
+```
+
+The first thing that we need to understand about the above code is the reference, a reference basically means in which table is going
+to be saved the relation or let's call it foreign key, usually the reference is store is the table with many relations in this case
+in review.
+
+Second, as you can see we use both anotations @OneToMany and @ManyToOne in order to make it work.
+
+Third, the mappedBy must be write it in the table that does not have the anotation, and must have the same reference 
+atribute name that was write in the review table. (in this case "course").
+
+Finally in the background hibernate is going to create an new column in the review table called course_id, if we change the
+reference name in the class course that name also is going to be changed (For instance, we named the refences as "c" in the database
+is going to be create a column called c_id").  
+
+## Adding Reviews.
+
+To add information when is a OneToMany relationship we could follow the next steps.
+
+1. Get the main entity.
+
+2. Create the new information ("Using just new())"
+
+3. Settup relation among the main entity and the new information
+
+4. Persist the new information.
+
+```java
+ public void addReviewsForCourse() {
+        Course course = findById(1001L);  // There is a course with id 1001 in the db.
+        logger.info("course.getReviews -> {}", course.getReviews());
+        //Creating Reviews
+        Review review1 = new Review("5", "This one is a new description");
+        Review review2 = new Review("5", "and here we again.");
+
+        // Setting relationships
+        review1.setCourse(course);
+        course.addReview(review1);
+        course.addReview(review2);
+        review2.setCourse(course);
+
+        // Adding review to the db
+        entityManager.persist(review1);
+        entityManager.persist(review2);
+        logger.info("course.getReviews -> {}", course.getReviews());
+    }
+```
+
+## Deleting Reviews.
+
+In order to delete one row of the OneToMany relationship we can follow the next steps.
+
+1. Get the main entity.
+
+2. Remove the element that we want to delete from the list
+
+3. Merge the changes
+
+```java
+ public void deleteTheFirstReview() {
+        Course course = findById(1001L);
+        logger.info("course.getReviews -> {}", course.getReviews());
+        List<Review> reviews = course.getReviews();
+        Review review = reviews.get(0);
+        course.removeReview(review); // In the course Entity there is a method that removes that specific element
+        entityManager.merge(course);
+        logger.info("course.getReviews -> {}", course.getReviews());
+    }
+ ```
+
 ## Fetching
 
-When we are using Jpa-Hibernate there is a very concept that is called fetching and basically means when and how the information is loaded from the database. For instance if we have a relationship between two tables and we want to retrieve all the info of the table and also all the info of the sub-tables only calling a findBy of the main entity is going to loaded all the info of the sub-entities but we can setup this behaviour.
+When we are using Jpa-Hibernate there is a very important concept that is called fetching and basically means when and how the information is loaded from the database. For instance if we have a relationship between two tables and we want to retrieve all the info of the table and also all the info of the sub-tables only calling a findBy of the main entity is going to loaded all the info of the sub-entities but we can setup this behaviour.
 
 ### Lazy
 
@@ -518,6 +631,18 @@ If we setup the relationship as lazy the information of the sub-entities is goin
 
 If we setup the relationship as eager the information of the sub-entities and the main entity are going to be loaded all together.
 
+### Fetch By RelationShip
+
+At this point we already defined what are the relationships in hibernate and what are the fetch types, it is also important to know
+that by default those relationships have an specific fetch type
+
+@OneToOne   -> Eagerly
+
+@ManyToOne  -> Eagerly
+
+@OneToMany  -> Lazy
+
+@ManyToMany -> Lazy
 
 # Spring Cloud
 
