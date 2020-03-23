@@ -8,7 +8,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.EntityManager;
+import javax.persistence.TypedQuery;
 import javax.transaction.Transactional;
+import java.util.List;
 
 @Repository
 @Transactional
@@ -73,5 +75,12 @@ public class StudentRepository {
         entityManager.persist(course);
         entityManager.persist(student);
     }
+
+    public List<Student> retrieveStudentWithPassport() {
+        TypedQuery<Student> query = entityManager.createQuery("Select s from Student s where s.passport.number like '%11%'", Student.class);
+        return query.getResultList();
+    }
+
+
 }
 

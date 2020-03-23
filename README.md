@@ -428,6 +428,47 @@ return (ArrayList) query.getResultList();
 
 In the previous example we used the entity manager as usual and also we define the Select jpql query in order to retrieve all the courses from the database.
 
+Examples
+
+```java
+   public void retrieveCoursesWithoutStudents() {
+        TypedQuery<Course> query = entityManager.createQuery("Select c from Course c where c.students is empty", Course.class);
+        List<Course> resultList = query.getResultList();
+        logger.info("Course without students {}", resultList);
+    }
+
+    public void retrieveCoursesWithMoreThanTwoStudents() {
+        TypedQuery<Course> query = entityManager.createQuery("Select c from Course c where size(c.students) >= 2", Course.class);
+        List<Course> resultList = query.getResultList();
+        logger.info("Course without students {}", resultList);
+    }
+
+    public void retrieveCoursesOrderBySize() {
+        TypedQuery<Course> query = entityManager.createQuery("Select c from Course c order by size(c.students)", Course.class);
+        List<Course> resultList = query.getResultList();
+        logger.info("Course without students {}", resultList);
+    }
+
+    // JOIN -> Select c,s from Course c JOIN c.students s;
+    // LEFT JOIN -> Select c,s from Course c LEFT JOIN c.students s;
+    // CROSS JOIN -> Select c,s from Course c CROSS JOIN c.students s;
+    public void join() {
+        Query query = entityManager.createQuery("Select c,s from Course c JOIN c.students s");
+        List<Object[]> resultList = query.getResultList();
+        logger.info("JOIN Course size-> {}", resultList.size());
+        for (Object[] result : resultList) {
+            logger.info("Course {} Student {}", result[0], result[1]);
+        }
+    }
+    
+     public List<Student> retrieveStudentWithPassport() {
+           TypedQuery<Student> query = entityManager.createQuery("Select s from Student s where s.passport.number like '%11%'", Student.class);
+           return query.getResultList();
+       }
+```
+
+As you can see in the above examples with JPQL you use the name of the entity instead of tables, and even you can use nested properties as Student.passport.number.
+
 ## Named Queries
 
 Named Queries is a way to re use JPQL queries.

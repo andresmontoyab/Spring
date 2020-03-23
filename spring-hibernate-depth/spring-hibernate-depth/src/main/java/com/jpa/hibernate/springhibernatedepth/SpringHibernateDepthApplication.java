@@ -38,12 +38,20 @@ public class SpringHibernateDepthApplication implements CommandLineRunner {
     public void run(String... args) throws Exception {
         //basicJpaWithCourseRepository();
         //JpaRelationShips();
+        //JpaInheritance();
+        courseRepository.retrieveCoursesWithoutStudents();
+        courseRepository.retrieveCoursesWithMoreThanTwoStudents();
+        courseRepository.retrieveCoursesOrderBySize();
+        logger.info("Student with passport patter 11 {}",studentRepository.retrieveStudentWithPassport());
+        courseRepository.join();
 
+    }
+
+    private void JpaInheritance() {
         logger.info("*****************//// Working with Employees //////////***************");
         employeeRepository.insert(new FullTimeEmployee("Jack", new BigDecimal(10000)));
         employeeRepository.insert(new PartTimeEmployee("Jill", new BigDecimal(50)));
         logger.info("Employees {}", employeeRepository.retrieveAllFullTimeEmployees());
-
     }
 
     private void JpaRelationShips() {

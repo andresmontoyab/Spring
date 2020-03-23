@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import javax.persistence.TypedQuery;
 import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
@@ -130,5 +131,35 @@ public class CourseRepository {
         course.removeReview(review);
         entityManager.merge(course);
         logger.info("course.getReviews -> {}", course.getReviews());
+    }
+
+    public void retrieveCoursesWithoutStudents() {
+        TypedQuery<Course> query = entityManager.createQuery("Select c from Course c where c.students is empty", Course.class);
+        List<Course> resultList = query.getResultList();
+        logger.info("Course without students {}", resultList);
+    }
+
+    public void retrieveCoursesWithMoreThanTwoStudents() {
+        TypedQuery<Course> query = entityManager.createQuery("Select c from Course c where size(c.students) >= 2", Course.class);
+        List<Course> resultList = query.getResultList();
+        logger.info("Course without students {}", resultList);
+    }
+
+    public void retrieveCoursesOrderBySize() {
+        TypedQuery<Course> query = entityManager.createQuery("Select c from Course c order by size(c.students)", Course.class);
+        List<Course> resultList = query.getResultList();
+        logger.info("Course without students {}", resultList);
+    }
+
+    // JOIN -> Select c,s from Course c JOIN c.students s;
+    // LEFT JOIN -> Select c,s from Course c LEFT JOIN c.students s;
+    // CROSS JOIN -> Select c,s from Course c CROSS JOIN c.students s;
+    public void join() {
+        Query query = entityManager.createQuery("Select c,s from Course c JOIN c.students s");
+        List<Object[]> resultList = query.getResultList();
+        logger.info("JOIN Course size-> {}", resultList.size());
+        for (Object[] result : resultList) {
+            logger.info("Course {} Student {}", result[0], result[1]);
+        }
     }
 }
