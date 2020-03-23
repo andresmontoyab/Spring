@@ -4,6 +4,7 @@ import com.jpa.hibernate.springhibernatedepth.entity.Course;
 import com.jpa.hibernate.springhibernatedepth.entity.FullTimeEmployee;
 import com.jpa.hibernate.springhibernatedepth.entity.PartTimeEmployee;
 import com.jpa.hibernate.springhibernatedepth.repository.CourseRepository;
+import com.jpa.hibernate.springhibernatedepth.repository.CourseRepositoryCriteria;
 import com.jpa.hibernate.springhibernatedepth.repository.EmployeeRepository;
 import com.jpa.hibernate.springhibernatedepth.repository.StudentRepository;
 import org.slf4j.Logger;
@@ -30,6 +31,9 @@ public class SpringHibernateDepthApplication implements CommandLineRunner {
     @Autowired
     EmployeeRepository employeeRepository;
 
+    @Autowired
+    CourseRepositoryCriteria courseRepositoryCriteria;
+
     public static void main(String[] args) {
         SpringApplication.run(SpringHibernateDepthApplication.class, args);
     }
@@ -39,12 +43,19 @@ public class SpringHibernateDepthApplication implements CommandLineRunner {
         //basicJpaWithCourseRepository();
         //JpaRelationShips();
         //JpaInheritance();
+        //workingWithJpql();
+        courseRepositoryCriteria.getAllCourses();
+        courseRepositoryCriteria.getAllCoursesRelatedWithSpring();
+        courseRepositoryCriteria.getAllCoursesWithoutStudents();
+        courseRepositoryCriteria.getAllCoursesJoinWithStudents();
+    }
+
+    private void workingWithJpql() {
         courseRepository.retrieveCoursesWithoutStudents();
         courseRepository.retrieveCoursesWithMoreThanTwoStudents();
         courseRepository.retrieveCoursesOrderBySize();
         logger.info("Student with passport patter 11 {}",studentRepository.retrieveStudentWithPassport());
         courseRepository.join();
-
     }
 
     private void JpaInheritance() {

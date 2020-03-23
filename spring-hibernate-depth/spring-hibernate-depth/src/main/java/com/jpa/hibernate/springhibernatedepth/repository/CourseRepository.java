@@ -15,7 +15,6 @@ import java.util.List;
 
 @Repository
 @Transactional
-
 public class CourseRepository {
 
     @Autowired

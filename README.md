@@ -14,33 +14,33 @@
             * [Insert Jdbc](#Insert-Jdbc)
             * [Update Jdbc](#Update-Jdbc)
     * [Spring JPA](#Spring-JPA)
-        * [Basic Concepts](#Basic-Concepts)
-            * [ORM](#ORM)
-            * [Entities](#Entities)
-            * [Entities Manager](#Entities-Manager)
-                * [Persist](#persist)
-                * [Merge](#merge)
-                * [Remove](#remove)
-                * [Flush](#flush)
-                * [Detach](#detach)
-                * [Clear](#clear)
-                * [Refrest](#refresh)
-            * [Repository](#Repository)
-            * [JPQL](#JPQL)
-                * [Named Queries](#Named-Queries)
-            * [Relationships](#Relationships)
-                * [One to One ](#One-To-One)
-                * [One to Many ](#One-To-Many)
-                * [Many to Many](#Many-To-Many)
-                * [Fetching](#Fetching)
-                    * [Lazy](#Lazy)
-				    * [Eager](#Eager)
-				    * [Fetch By RelationShip](#Fetch-By-RelationShip)
-				* [JPA Inheritance](#JPA-Inheritance)
-				    * [Single Table](#Single-Table)
-				    * [Table per class](#Table-per-class)
-				    * [Joined](#Joined )
-				    * [MappedSuperClass](#MappedSuperClass)
+        * [ORM](#ORM)
+        * [Entities](#Entities)
+        * [Entities Manager](#Entities-Manager)
+            * [Persist](#persist)
+            * [Merge](#merge)
+            * [Remove](#remove)
+            * [Flush](#flush)
+            * [Detach](#detach)
+            * [Clear](#clear)
+            * [Refrest](#refresh)
+        * [Repository](#Repository)
+        * [JPQL](#JPQL)
+            * [Named Queries](#Named-Queries)
+        * [Criteria Query](#Criteria-Query)
+        * [Relationships](#Relationships)
+            * [One to One ](#One-To-One)
+            * [One to Many ](#One-To-Many)
+            * [Many to Many](#Many-To-Many)
+            * [Fetching](#Fetching)
+                * [Lazy](#Lazy)
+                * [Eager](#Eager)
+                * [Fetch By RelationShip](#Fetch-By-RelationShip)
+        * [JPA Inheritance](#JPA-Inheritance)
+            * [Single Table](#Single-Table)
+            * [Table per class](#Table-per-class)
+            * [Joined](#Joined )
+            * [MappedSuperClass](#MappedSuperClass)
 * [Spring Cloud](#Spring-Cloud)
     * [Microservice](#Microservice)
     * [Creating Microservices](#Creating-Microservices)
@@ -271,10 +271,6 @@ JPA is another approach when we are dealing with databases, the main difference 
 
 JPA is a standard, the most famous implementation is Hibernate.
 
-## Basic Concepts
-
-Those are the basics concepto require to understand how works the JPA approach.
-
 ## ORM
 
 ORM stands for Object Relational Mapping and is an strategy used it to map information from the relational world like tables to the objectual world like objects. 
@@ -502,6 +498,114 @@ To call a NamedQuery you should only use the entity manager's method createNamed
         Query query = entityManager.createNamedQuery("query_get_all_courses");
         return (ArrayList) query.getResultList();
     }
+```
+
+## Criteria Query
+
+JPQL is not the only way to retrieve information from the DB, there is another approach that is call Criteria Query.
+
+The main difference between these approaches is that JPQL syntax is very similar to SQL, and Criteria Query is not related with SQL
+is pure Java code.
+
+In order to use Criteria Query you can follow the next steps.
+
+1. Use Criteria Builder to create a Criteria Query returning the expected result object.
+
+2. Define root for tables that are involved in the query
+
+3. Define predicates etc using Criteria Builder.
+
+4. Add Predicate etc to the Criteria Query.
+
+5. Build the TypedQuery using the entity manager and the Criteria Query.
+
+Examples:
+
+```java
+@Repository
+@Transactional
+public class CourseRepositoryCriteria {
+
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
+
+    @Autowired
+    EntityManager entityManager;
+
+    public void getAllCourses() {
+        // Step 1 -> Select c from Course c;
+        CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Course> criteriaQuery = criteriaBuilder.createQuery(Course.class);
+
+        //Step 2
+        Root<Course> courseRoot = criteriaQuery.from(Course.class);
+
+        //Step 3
+        //Step 4
+
+        //Step 5
+        TypedQuery<Course> query = entityManager.createQuery(criteriaQuery.select(courseRoot));
+        List<Course> courses = query.getResultList();
+        logger.info("Courses with Criteria Query -> {}", courses);
+    }
+
+    public void getAllCoursesRelatedWithSpring() {
+        // Step 1 -> Select c From Course c where name like '%Spring%'
+        CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Course> criteriaQuery = criteriaBuilder.createQuery(Course.class);
+
+        //Step 2
+        Root<Course> courseRoot = criteriaQuery.from(Course.class);
+
+        //Step 3
+        Predicate likeSpring = criteriaBuilder.like(courseRoot.get("name"), "%Spring%");
+
+        //Step 4
+        criteriaQuery.where(likeSpring);
+
+        // Step 5
+        TypedQuery<Course> query = entityManager.createQuery(criteriaQuery.select(courseRoot));
+        List<Course> courses = query.getResultList();
+        logger.info("Courses with word Spring and with Criteria Query -> {}", courses);
+    }
+
+    public void getAllCoursesWithoutStudents() {
+        // Step 1 -> Select c From Course c where c.students is empty
+        CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Course> criteriaQuery = criteriaBuilder.createQuery(Course.class);
+
+        //Step 2
+        Root<Course> courseRoot = criteriaQuery.from(Course.class);
+
+        //Step 3
+        Predicate studentIsEmpty = criteriaBuilder.isEmpty(courseRoot.get("students"));
+
+        //Step 4
+        criteriaQuery.where(studentIsEmpty);
+
+        // Step 5
+        TypedQuery<Course> query = entityManager.createQuery(criteriaQuery.select(courseRoot));
+        List<Course> courses = query.getResultList();
+        logger.info("Courses with no students and with Criteria Query -> {}", courses);
+    }
+
+    public void getAllCoursesJoinWithStudents() {
+        // Step 1 -> Select c From Course c where c JOIN c.students
+        CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Course> criteriaQuery = criteriaBuilder.createQuery(Course.class);
+
+        //Step 2
+        Root<Course> courseRoot = criteriaQuery.from(Course.class);
+
+        //Step 3
+        Join<Object, Object> join = courseRoot.join("students", JoinType.LEFT);
+
+        //Step 4
+        // Step 5
+        TypedQuery<Course> query = entityManager.createQuery(criteriaQuery.select(courseRoot));
+        List<Course> courses = query.getResultList();
+        logger.info("Courses Join with students and with Criteria Query -> {}", courses);
+    }
+}
 ```
 
 ## Relationships
