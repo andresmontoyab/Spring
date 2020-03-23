@@ -36,6 +36,7 @@
                     * [Lazy](#Lazy)
 				    * [Eager](#Eager)
 				    * [Fetch By RelationShip](#Fetch-By-RelationShip)
+				* [JPA Inheritance](#JPA-Inheritance)
 * [Spring Cloud](#Spring-Cloud)
     * [Microservice](#Microservice)
     * [Creating Microservices](#Creating-Microservices)
@@ -782,6 +783,202 @@ that by default those relationships have an specific fetch type
 
 In order to know more about what is cascade you ca refer to the next link. https://howtodoinjava.com/hibernate/hibernate-jpa-cascade-types/
 
+## JPA Inheritance
+
+As we may know one of the main features of the OOP world is the inheritance, now the question Can we use inheritance with JPA? and the answer is yes.
+
+Let's explain JPA inheritance with an example.
+
+We have two kind of employees: FullTimeEmployee(salary) and PartTimeEmployee(hourlyWage) and both of this employees share some atributes
+as id and name.
+
+Steps to setup the inheritances
+
+1. Define an abstract class with common properties.
+
+2. Create the concrete classes that extend from the abstract class
+
+3. Define the inheritance type to use (Single Table, Table per class, Mapped super class or Joined)
+
+```java
+@Entity
+public abstract class Employee {
+
+    @Id
+    @GeneratedValue
+    private Long id;
+
+    @Column(nullable = false)
+    private String name;
+
+    public Employee(String name) {
+        this.name = name;
+    }
+
+    public Employee() {
+    }
+  }
+  
+  @Entity
+  public class FullTimeEmployee extends Employee {
+  
+      public FullTimeEmployee() {
+      }
+  
+      public FullTimeEmployee(String name, BigDecimal salary) {
+          super(name);
+          this.salary = salary;
+      }
+  
+      private BigDecimal salary;
+}
+
+@Entity
+public class PartTimeEmployee extends Employee {
+
+    public PartTimeEmployee() {
+    }
+
+    public PartTimeEmployee(String name, BigDecimal hourlyWage) {
+        super(name);
+        this.hourlyWage = hourlyWage;
+    }
+
+    private BigDecimal hourlyWage;
+}
+```
+
+## Single Table
+
+Single table is de default type of inheritance and means that all of the information of the concrete class (FullTimeEmployee and PartTimeEmployee) 
+are going to be store in the same table(Employee) and in this table one column is going to be add named DTYPE that basically means
+what kind of employee is.
+
+In order to setup Single Table inheritance we must update the abstract class adding @Inhertiance annotation, also if we want to change
+the name of the DTYPE column we can add the annotation @DiscriminatorColumn(name = "EMPLOYEE_TYPE") with the name
+
+```java
+@Entity
+@Inheritance
+@DiscriminatorColumn(name = "EMPLOYEE_TYPE")
+public abstract class Employee {
+
+    @Id
+    @GeneratedValue
+    private Long id;
+
+    @Column(nullable = false)
+    private String name;
+
+    public Employee(String name) {
+        this.name = name;
+    }
+
+    public Employee() {
+    }
+  }
+```
+
+Regarding the single table approach it is very good in performance because all the information is only in one table, so no join are required
+but regarding data integrity has some problems, because there are going to be a lot of "null" values.
+
+![](https://github.com/andresmontoyab/Spring/blob/master/resources/inheritance-single-table-null.PNG)
+
+## Table per class
+
+Table per class is another approach to the JPA inheritance but with this approach JPA is going to map the concrete class to different
+tablas, one table per concrete class, so in this way there is no only one table could be n tables.
+
+In order to setup the table per class we only need to add the  inheritance strategy type as TablePerClass
+
+Example:
+
+```java
+@Entity
+@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+public abstract class Employee {
+
+    @Id
+    @GeneratedValue
+    private Long id;
+
+    @Column(nullable = false)
+    private String name;
+
+    public Employee(String name) {
+        this.name = name;
+    }
+
+    public Employee() {
+    }
+  }
+```
+
+The performance with this approach is slower than the Single table, because we need to union all the tables if we want to retrieve all the 
+employees.
+
+There is another problem with this approach all the common field are mapped in both tables, so if we have 3 concrete tables, these three tables
+are going to have the common fields.
+
+## Joined 
+
+Joined strategy solves the problem of the Table Per class in where all the common field are mapped in all the tables, with this approach
+JPA is going to create one Table for the abstract class with all the common fields and also create table for the concrente tables with the
+specific fields. In order to relate the concrete tables with the parent table, in each concrete table is going to be store a foreign key with the 
+needed id.
+
+```java
+@Entity
+@Inheritance(strategy = InheritanceType.JOINED)
+public abstract class Employee {
+
+    @Id
+    @GeneratedValue
+    private Long id;
+
+    @Column(nullable = false)
+    private String name;
+
+    public Employee(String name) {
+        this.name = name;
+    }
+
+    public Employee() {
+    }
+  }
+```
+If we want to retrieve all the information (common fields + specific fields) we need to use joins with the parent table and concrete tables.
+
+## MappedSuperClass
+
+This last option is basically not use inheritance at all, the abstract class is going to be only a map class, and for this reason
+this class can not be an entity. Mapping only applied to subclasses because no table exist for the abstract class.
+
+```java
+@MappedSuperclass
+public abstract class Employee {
+
+    @Id
+    @GeneratedValue
+    private Long id;
+
+    @Column(nullable = false)
+    private String name;
+
+    public Employee(String name) {
+        this.name = name;
+    }
+
+    public Employee() {
+    }
+  }
+```
+
+MapSuperclass completly delete the inheritance from the abstract class to the concrete class,
+so the difference between MapSuerclass and Table per class is that for Table per class the abstract 
+class is an entity and there is an inheritance relationship among the abstract class and the concrete, but in the
+mappedSuperClass there isn´t.
+
 # Spring Cloud
 
 # Microservice
@@ -793,8 +990,6 @@ Small autonomous services that work together.
 3. Cloud enabled
 
 ## Challenges with microservices
-
-
 
 ## Creating Microservices
 
