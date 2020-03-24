@@ -5,6 +5,7 @@ import com.jpa.hibernate.springhibernatedepth.entity.FullTimeEmployee;
 import com.jpa.hibernate.springhibernatedepth.entity.PartTimeEmployee;
 import com.jpa.hibernate.springhibernatedepth.repository.CourseRepository;
 import com.jpa.hibernate.springhibernatedepth.repository.CourseRepositoryCriteria;
+import com.jpa.hibernate.springhibernatedepth.repository.CourseSpringDataRepository;
 import com.jpa.hibernate.springhibernatedepth.repository.EmployeeRepository;
 import com.jpa.hibernate.springhibernatedepth.repository.StudentRepository;
 import org.slf4j.Logger;
@@ -13,6 +14,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import java.math.BigDecimal;
 
@@ -34,6 +39,9 @@ public class SpringHibernateDepthApplication implements CommandLineRunner {
     @Autowired
     CourseRepositoryCriteria courseRepositoryCriteria;
 
+    @Autowired
+    CourseSpringDataRepository courseSpringDataRepository;
+
     public static void main(String[] args) {
         SpringApplication.run(SpringHibernateDepthApplication.class, args);
     }
@@ -44,6 +52,30 @@ public class SpringHibernateDepthApplication implements CommandLineRunner {
         //JpaRelationShips();
         //JpaInheritance();
         //workingWithJpql();
+        //JpaWithCriteriaApi();
+        Course newCourse = new Course("New Spring Data Course");
+        courseSpringDataRepository.save(newCourse);
+        newCourse.setName("New Spring Data Course - Updated");
+        courseSpringDataRepository.save(newCourse);
+        logger.info("Amount of courses is {}", courseSpringDataRepository.count());
+        logger.info("All courses -> {}", courseSpringDataRepository.findAll());
+
+        Sort sort = new Sort(Sort.Direction.DESC, "name");
+        logger.info("All courses sorted -> {}", courseSpringDataRepository.findAll(sort));
+
+        PageRequest pageRequest = PageRequest.of(0, 2);
+        Page<Course> firstPage = courseSpringDataRepository.findAll(pageRequest);
+        logger.info("First Page -> {}", firstPage.getContent());
+
+        Pageable pageable = firstPage.nextPageable();
+        Page<Course> secondPage = courseSpringDataRepository.findAll(pageable);
+        logger.info("Second Page -> {}", secondPage.getContent());
+
+        logger.info("Course with name JPA in 50 steps -> {}", courseSpringDataRepository.findByName("JPA in 50 steps"));
+
+    }
+
+    private void JpaWithCriteriaApi() {
         courseRepositoryCriteria.getAllCourses();
         courseRepositoryCriteria.getAllCoursesRelatedWithSpring();
         courseRepositoryCriteria.getAllCoursesWithoutStudents();

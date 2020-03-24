@@ -44,6 +44,10 @@
         * [Transaction Management](#Transaction-Management)
             * [Isolation Problems](#Isolation-Problems)
             * [Isolation Levels](#Isolation-Levels)
+    * [Spring Data](#Spring-Data)
+        * [Pagination](#Pagination)
+        * [Custom Search](#Custom-Search)
+        * [Spring Data Jpa Rest](#Spring-Data-Jpa-Rest)
 * [Spring Cloud](#Spring-Cloud)
     * [Microservice](#Microservice)
     * [Creating Microservices](#Creating-Microservices)
@@ -274,9 +278,15 @@ JPA is another approach when we are dealing with databases, the main difference 
 
 JPA is a standard, the most famous implementation is Hibernate.
 
+One important thing to understand with JPA/Hibernate is that even we do not to write sql code in the background hibernates is using JDBC, so internally
+hibernrate is writing SQL code for us.
+
+
+![](https://github.com/andresmontoyab/Spring/blob/master/resources/hibernate-architecture.PNG)
+
 ## ORM
 
-ORM stands for Object Relational Mapping and is an strategy used it to map information from the relational world like tables to the objectual world like objects. 
+ORM stands for Object Relational Mapping and is an strategy used it to map information from the relational world like tables to the objetual world like objects. 
 
 ## Entities
 
@@ -1201,6 +1211,157 @@ In order to configre the isolation level in spring you only need to modifies the
 ```
 
 Be aware to import the @Transactional annotation from spring and not from javax.
+
+## Spring Data
+
+Spring Data provides abstraction on top of the persistence store you are using (JPA, NoSQL, JDBC etc.) 
+you can significantly reduce the amount of boilerplate code required to implement data access layers for those persistence stores
+
+Spring Data has many modules corresponding to supported persistence stores:
+
+1. Spring Data JDBC
+
+2. Spring Data JPA 
+
+3. Spring Data MongoDB
+
+so forth ...
+
+
+![](https://github.com/andresmontoyab/Spring/blob/master/resources/spring-data.PNG)
+
+## Spring Data JPA
+
+Spring Data JPA is the JPA specific implementaion of Spring Data, usually the JPA provider for Spring Data JPA is Hibernate.
+
+In order to use Spring Data JPA we need to follow the next steps:
+
+1. Configure our Entity(JPA) or Document(NoSql->Mongo)
+
+2. Define an Id in the Entiy or Document
+
+3. Create Interface that extends from JpaRepository interface
+
+4. To the generics of JpaRepository the first argument is the entity and the second is the type of the Id
+
+Example:
+
+```java
+@Entity
+public class Course {
+
+    @Id
+    @GeneratedValue
+    private Long id;
+
+    private String name;
+}
+
+public interface CourseSpringDataRepository extends JpaRepository<Course, Long> {
+
+         
+}
+
+class MainApp implements CommandLineRunner {
+
+    @Autowired
+    CourseSpringDataRepository courseSpringDataRepository;
+
+    public static void main(String[] args) {
+        SpringApplication.run(SpringHibernateDepthApplication.class, args);
+    }
+
+    @Override
+    public void run(String... args) throws Exception {
+        Course newCourse = new Course("New Spring Data Course");
+        courseSpringDataRepository.save(newCourse); // Saving course
+        newCourse.setName("New Spring Data Course - Updated");
+        courseSpringDataRepository.save(newCourse); // Updating course
+        
+        courseSpringDataRepository.findAll(); // Getting all courses
+        
+        Sort sort = new Sort(Sort.Direction.DESC, "name");
+        courseSpringDataRepository.findAll(); // Getting all courses sorted
+        
+    }
+}
+```
+
+
+## Pagination
+
+When you have a set of result and you want to divide those result in pages, for instante if we have 100 records in one table
+and we want only to return 20 at time, so in this scenario we use pagination.
+
+```java
+      // Pagination
+      void workingWithPagination() {
+        PageRequest pageRequest = PageRequest.of(0, 2);
+        Page<Course> firstPage = courseSpringDataRepository.findAll(pageRequest);
+        firstPage.getContent(); // First Page
+        
+        Pageable pageable = firstPage.nextPageable();
+        Page<Course> secondPage = courseSpringDataRepository.findAll(pageable);
+        secondPage.getContent();
+} // Second Page
+```
+
+## Custom Search
+
+If we want to add custom search to our spring data repository, we need to modify the interface that we created. There are 
+two ways to create these custom queries:
+
+1. Adding the method with the next structure "especialList" + exactly name atribute, for instance findByName();
+
+The especialList are the next findBy, countBy, deleteBy.
+
+2. Adding the @Query annotation and in inside writing JPQL.
+
+```java
+public interface CourseSpringDataRepository extends JpaRepository<Course, Long> {
+
+    List<Course> findByName(String name);
+    List<Course> findByNameAndId(String name, String id);
+    List<Course> countByName(String name);
+    List<Course> findByNameOrderByIdDesc(String name);
+    List<Course> deleteByName(String name);
+
+    @Query("Select c From Course c where name like '%50%'")
+    List<Course> courseWith50InName();
+
+    @Query(value = "Select c From Course c where name like '%50%'", nativeQuery = true)
+    List<Course> courseWith50InNameUsingNativeQuery();
+}
+```
+
+## Spring Data Jpa Rest
+
+We can expose our repositories as endpoint using Spring Data Jpa Rest.
+
+Steps:
+
+1. Download the Spring Data JPA Rest dependencie
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-data-rest</artifactId>
+</dependency>
+```
+
+2. Add the @RepositoryRestResource(path = "/courses") in the Repository.
+
+```java
+@RepositoryRestResource(path = "/courses")
+public interface CourseSpringDataRepository extends JpaRepository<Course, Long> {
+
+    List<Course> findByName(String name);
+    List<Course> findByNameAndId(String name, String id);
+    List<Course> countByName(String name);
+    List<Course> findByNameOrderByIdDesc(String name);
+    List<Course> deleteByName(String name);
+}
+```
 
 # Spring Cloud
 
