@@ -42,6 +42,8 @@
             * [Joined](#Joined )
             * [MappedSuperClass](#MappedSuperClass)
         * [Transaction Management](#Transaction-Management)
+            * [Isolation Problems](#Isolation Problems)
+            * [Isolation Levels](#Isolation Levels)
 * [Spring Cloud](#Spring-Cloud)
     * [Microservice](#Microservice)
     * [Creating Microservices](#Creating-Microservices)
@@ -1156,7 +1158,7 @@ In relation database there are some key concepts that we must know.
 
 * D - Durable: When an operation finish, the result must be keep it in the db.
 
-## Isolation
+## Isolation Problems
 
 When we are talking about isolation, we find some problems some of them are the next:
 
