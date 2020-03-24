@@ -41,6 +41,7 @@
             * [Table per class](#Table-per-class)
             * [Joined](#Joined )
             * [MappedSuperClass](#MappedSuperClass)
+        * [Transaction Management](#Transaction-Management)
 * [Spring Cloud](#Spring-Cloud)
     * [Microservice](#Microservice)
     * [Creating Microservices](#Creating-Microservices)
@@ -1127,6 +1128,77 @@ MapSuperclass completly delete the inheritance from the abstract class to the co
 so the difference between MapSuerclass and Table per class is that for Table per class the abstract 
 class is an entity and there is an inheritance relationship among the abstract class and the concrete, but in the
 mappedSuperClass there isn´t.
+
+## Transaction Management
+
+Let's talk now about transactions, this is one of the most important concepts when we are talking about database, a transaction is
+a number of steps that must be done in order to finish a specific task.
+ 
+Example: The "transfer" money transaction have two steps
+
+1. Withdraw money from account A 
+2. Deposit money in the account b. 
+
+But with this transaction arises one questions, What happend if the second operation fails? What the application should do?
+
+In the above scenarios the application should rollback(Revert all the changes to the initial status.), but if both steps(all steps)
+in the transacction finish sucessfully the aplication must commit the changes (preserve the changes in the db.)
+
+In relation database there are some key concepts that we must know.
+
+### ACID
+
+* A - Atomic: If the transaction have multiples steps, the changes are only going to be commited if all the steps are sucessfully.
+
+* C - Consistency: Be sure to keep the integrity of the data.
+  
+* I - Isolate: One transaction or operation can not affect another one.
+
+* D - Durable: When an operation finish, the result must be keep it in the db.
+
+## Isolation
+
+When we are talking about isolation, we find some problems some of them are the next:
+
+1. Dirty Read: Happens when we are working in a parallel environment an the row that we are using is changed in the same time
+for another Thread , and that cause that the consistency of the application fails.
+
+2. Non repeatable Read:  When I'm reading the same value twice in the transaction and I get two different values.
+
+3. Phanthom Read: At different times I'm getting different number of rows in the same transaction with the same query.
+
+## Isolation Levels 
+
+1. Read Uncommited: No restriction, you allow any transaction to read any data.
+
+2. Read Commited: Only allow a transaction to read the data if is commited by other transaction.
+
+3. Repeatable Read: It will lock an specific row, and it will not be available for other transaction, only when this transaction
+complete the execution this row will be release(this only is going to create a lock for one row).
+
+4. Serializable: A Lock will be create for any row that matches a predicate(where a.name = '%a%'), so those transaction that 
+are trying to modify or add at least one of those rows aren't allow to do it.
+
+
+|                 | Dirty Read  |   Non repeatable Read | Phantom Read   |
+|-----------------|-------------|-----------------------|----------------|
+|Read Uncommited  |Possible     |Possible               |Possible        |
+|Read Committed   |Solved       |Possible               |Possible        | 
+|Repetable Read   |Solved       |Solved                 |Possible        | 
+|Serializable     |Solved       |Solved                 |Solved          | 
+
+In the above table are mapping the isolation problems with Isolation level solutions.
+
+In order to configre the isolation level in spring you only need to modifies the @Transactiontional annotation.
+
+```java
+@Transactional(isolation = Isolation.READ_UNCOMMITTED)
+@Transactional(isolation = Isolation.READ_COMMITTED)
+@Transactional(isolation = Isolation.REPEATABLE_READ)
+@Transactional(isolation = Isolation.SERIALIZABLE)
+```
+
+Be aware to import the @Transactional annotation from spring and not from javax.
 
 # Spring Cloud
 
