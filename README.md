@@ -1363,6 +1363,29 @@ public interface CourseSpringDataRepository extends JpaRepository<Course, Long> 
 }
 ```
 
+## Jpa Caching
+
+Usually in applications we need to call external service as database in order to retrieve data that we need, this request
+takes a good amount of time, but what happend if we need to retrieve multiples time the same information, Are we going to call
+multiples time to database for the same information? The answer is no, we only are going to call one time and store that information
+in cache and in the next calls we retrieve the data from the cache.
+
+In JPA there are two levels of caching:
+
+* FLC: First Level of Caching 
+* SLC: Second level of Caching
+
+| Transaction One         | Transaction Two         |  Transaction Three      | Transaction Four        |
+|-------------------------|-------------------------|-------------------------|-------------------------|
+|Persistence Context1(FLC)|Persistence Context1(FLC)|Persistence Context1(FLC)|Persistence Context1(FLC)|
+|                                           Second Level Cache                                          |
+|                                           Database                                                    |
+ 
+ So as you can see in the above table, the first level of cache has the scope of the transaction, so you could cache information
+ in only the same transactions.
+ 
+ The second level of cache is across all the transactions.
+
 # Spring Cloud
 
 # Microservice
