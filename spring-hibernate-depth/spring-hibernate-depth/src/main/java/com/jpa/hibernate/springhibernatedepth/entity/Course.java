@@ -3,6 +3,7 @@ package com.jpa.hibernate.springhibernatedepth.entity;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.data.annotation.CreatedDate;
 
+import javax.persistence.Cacheable;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -20,6 +21,7 @@ import java.util.List;
         @NamedQuery(name="query_get_all_courses", query="Select c from Course c"),
         @NamedQuery(name="query_get_all_courses_copy", query="Select c from Course c")
 })
+@Cacheable
 public class Course {
 
     @Id

@@ -18,6 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 
@@ -53,6 +54,23 @@ public class SpringHibernateDepthApplication implements CommandLineRunner {
         //JpaInheritance();
         //workingWithJpql();
         //JpaWithCriteriaApi();
+        //playingWithSpringData();
+        //firstLevelCache();
+
+    }
+
+
+    @Transactional
+    private void firstLevelCache() {
+        logger.info("Calling First Time");
+        courseRepository.findById(1001L);
+        logger.info("Calling Second Time");
+        courseRepository.findById(1001L);
+        logger.info("Calling Time Time");
+        courseRepository.findById(1001L);
+    }
+
+    private void playingWithSpringData() {
         Course newCourse = new Course("New Spring Data Course");
         courseSpringDataRepository.save(newCourse);
         newCourse.setName("New Spring Data Course - Updated");
@@ -72,7 +90,6 @@ public class SpringHibernateDepthApplication implements CommandLineRunner {
         logger.info("Second Page -> {}", secondPage.getContent());
 
         logger.info("Course with name JPA in 50 steps -> {}", courseSpringDataRepository.findByName("JPA in 50 steps"));
-
     }
 
     private void JpaWithCriteriaApi() {

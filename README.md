@@ -48,6 +48,9 @@
         * [Pagination](#Pagination)
         * [Custom Search](#Custom-Search)
         * [Spring Data Jpa Rest](#Spring-Data-Jpa-Rest)
+    * [Jpa Caching](#Jpa-Caching)
+        * [First Level Cache](#First-LevelCache)
+        * [Second Level Cache](#Second-level-Cache)        
 * [Spring Cloud](#Spring-Cloud)
     * [Microservice](#Microservice)
     * [Creating Microservices](#Creating-Microservices)
@@ -1384,8 +1387,77 @@ In JPA there are two levels of caching:
  So as you can see in the above table, the first level of cache has the scope of the transaction, so you could cache information
  in only the same transactions.
  
- The second level of cache is across all the transactions.
+ The second level of cache is across all the transactions, in the second level cache usually is store all the common information
+ require for all the transactions
+ 
+## First Level Cache
+ 
+ In order to setup the first level of cache the only thing that you need to do is mark your method as @Transactional
+ with the spring annotations.
+ 
+## Second Level Cache
+ 
+ If you want to setup a second level of cache please be aware that usually you only store in this cache data that does not change
+ or not change often.
+ 
+ Second Level cache needs configuration, in order to setup the second level cache you can follow the next steps:
+ 
+ 1. Add dependencie
+ 
+ ```xml
+<dependency>
+    <groupId>org.hibernate</groupId>
+    <artifactId>hibernate-ehcache</artifactId>
+</dependency>
+```
+		
+2. Enable second level cache in properties file
+ ```properties
+    spring.jpa.properties.hibernate.cache.use_second_level_cache=true
+ ```
 
+3. Specify the caching framework, in this cause is going to be EhCache (application.properties)
+ ```properties
+     spring.jpa.properties.hibernate.cache.region.factory_class=org.hibernate.cache.ehcache.EhCacheRegionFactory
+```
+4. Setup hibernate about what is going to be cache (application.properties)
+ ```properties
+    spring.jpa.properties.javax.persistence.sharedCache.mode=ENABLE_SELECTIVE
+ ```       
+In this point your configuration can have multiple options:
+
+1. ALL: All entities an entity related state and data are cached
+
+2. NONE: Caching is disabled for the persistence unit
+
+3. ENABLE_SELECTIVE: Caching is enabled for all entities for @Cacheable(true) is specified. All another entities are not cached.
+
+4. DISABLE_SELECTIVE: Caching is enabled for all entities except those for which @Cacheable(false) is specified.
+
+5. Unspecified: Caching behavior is undefined: provider-specific default may apply.
+
+5. Select the data to cache
+
+In order to mark an entity as cacheable we mark it with @Cacheable
+
+ ```java
+ @Entity
+ @Cacheable
+ public class Course {
+ 
+     @Id
+     @GeneratedValue
+     private Long id;
+ 
+     private String name;
+     
+     // getter, setter and constructors
+ 
+ }
+ ```
+ 
+ After all of this configuration our second level cache should works.
+    
 # Spring Cloud
 
 # Microservice
