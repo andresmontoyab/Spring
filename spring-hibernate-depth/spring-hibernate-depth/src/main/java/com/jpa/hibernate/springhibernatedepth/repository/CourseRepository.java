@@ -5,11 +5,11 @@ import com.jpa.hibernate.springhibernatedepth.entity.Review;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.datasource.IsolationLevelDataSourceAdapter;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityGraph;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
@@ -46,6 +46,15 @@ public class CourseRepository {
         //Query query = entityManager.createQuery(jpql);
         return (ArrayList) query.getResultList();
 
+    }
+
+    public void retrieveCoursesWithStudent() {
+        EntityGraph<Course> entityGraph = entityManager.createEntityGraph(Course.class);
+        entityGraph.addSubgraph("students");
+        List<Course> courses = entityManager.createNamedQuery("query_get_all_courses", Course.class)
+                .setHint("javax.persistence.loadgraph", entityGraph)
+                .getResultList();
+        courses.forEach(course -> logger.info("Course -> {} Students -> {}", course, course.getStudents()));
     }
 
     public void deleteById(Long id) {

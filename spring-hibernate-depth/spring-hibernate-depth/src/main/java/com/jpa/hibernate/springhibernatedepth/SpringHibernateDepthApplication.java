@@ -56,6 +56,7 @@ public class SpringHibernateDepthApplication implements CommandLineRunner {
         //JpaWithCriteriaApi();
         //playingWithSpringData();
         //firstLevelCache();
+        courseRepository.retrieveCoursesWithStudent();
 
     }
 
