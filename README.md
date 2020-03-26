@@ -53,7 +53,8 @@
         * [Spring Data Jpa Rest](#Spring-Data-Jpa-Rest)
     * [Jpa Caching](#Jpa-Caching)
         * [First Level Cache](#First-LevelCache)
-        * [Second Level Cache](#Second-level-Cache)        
+        * [Second Level Cache](#Second-level-Cache)
+    * [N + 1 Problem](#N-+-1-Problem)        
 * [Spring Cloud](#Spring-Cloud)
     * [Microservice](#Microservice)
     * [Creating Microservices](#Creating-Microservices)
@@ -1552,6 +1553,73 @@ In order to mark an entity as cacheable we mark it with @Cacheable
  ```
  
  After all of this configuration our second level cache should works.
+ 
+## N + 1 Problem
+
+When we are talking about N + 1 Problem is about performance issue. Basically is when
+we have lazy relationships in our relationships, let's see an example.
+
+We have two entities Courses and Students:
+
+* Course entities has a relation oneToMany with students.
+* The students atribute in Course entity is Lazy Fetch.
+
+ |Course                           | Amount Students |
+ |---------------------------------|-----------------|
+ |Software Architecture|Possible   |40               |
+ |Database Design                  |35               | 
+ |Learnig Testing                  |50               | 
+
+With the above information let's review the behaviour  
+
+1. When we retrieve all the courses from database, hibernate is going to run one JDBC query in order to retrieve
+the information of the courses (without the student)
+
+2. Because the relation between course and students is lazy all the students are not going to be loaded.
+
+3. If we want to retrieve the student we need to iterate over the List<Course> and get the students "course.getStudent()" 
+with that statement hibernate is going to run another query to get the student for that specific course.
+
+4. At the end if we want to retrieve all the courses and students, four JDBC statement were created, that is the N + 1 Problem.
+
+## Solving N+1 Problem
+
+## First Solution
+
+As we said before, this problem arise because we have a lazy fetch in our relationship, one of the easier way to solve this problem
+is chaging the fetch type to eager.
+
+But the consecuence to make it eager is that every time that we retrieve a course is going to load all the students.
+
+## Second Solution
+
+The second option is somethig call, Entity graph, this approach we are not going to change our entity and in the other hand
+we can specify in a method that we want to retrieve the students too.
+
+
+ ```java
+ @Entity
+ @Cacheable
+ public class CourseRepository {
+        
+      @Autowired
+      EntityManager entityManager;
+    
+      public void retrieveCoursesWithStudent() {
+             EntityGraph<Course> entityGraph = entityManager.createEntityGraph(Course.class);
+             entityGraph.addSubgraph("students");
+             List<Course> courses = entityManager.createNamedQuery("query_get_all_courses", Course.class)
+                     .setHint("javax.persistence.loadgraph", entityGraph)
+                     .getResultList();
+             courses.forEach(course -> logger.info("Course -> {} Students -> {}", course, course.getStudents()));
+         }
+ 
+ }
+ ```
+In the above solution we set up that every time that the method "retrieveCoursesWithStudent" is called, the Entity Manager is going
+to create a graph in where we say "We want also the students", and with this method, we can leave the relationship as lazy
+and only called the students when we needed.
+ 
     
 # Spring Cloud
 
