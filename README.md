@@ -16,6 +16,7 @@
     * [Spring JPA](#Spring-JPA)
         * [ORM](#ORM)
         * [Entities](#Entities)
+            * [Embedded and Embeddable](#Embedded-and-Embeddable)
         * [Entity Manager](#Entity-Manager)
             * [Methods](#Entity-Manager)
                 * [Persist](#persist)
