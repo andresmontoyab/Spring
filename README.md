@@ -1426,15 +1426,15 @@ In JPA there are two levels of caching:
  ```       
 In this point your configuration can have multiple options:
 
-1. ALL: All entities an entity related state and data are cached
-
-2. NONE: Caching is disabled for the persistence unit
-
-3. ENABLE_SELECTIVE: Caching is enabled for all entities for @Cacheable(true) is specified. All another entities are not cached.
-
-4. DISABLE_SELECTIVE: Caching is enabled for all entities except those for which @Cacheable(false) is specified.
-
-5. Unspecified: Caching behavior is undefined: provider-specific default may apply.
+    *. ALL: All entities an entity related state and data are cached
+    
+    *. NONE: Caching is disabled for the persistence unit
+    
+    *. ENABLE_SELECTIVE: Caching is enabled for all entities for @Cacheable(true) is specified. All another entities are not cached.
+    
+    *. DISABLE_SELECTIVE: Caching is enabled for all entities except those for which @Cacheable(false) is specified.
+    
+    *. Unspecified: Caching behavior is undefined: provider-specific default may apply.
 
 5. Select the data to cache
 
