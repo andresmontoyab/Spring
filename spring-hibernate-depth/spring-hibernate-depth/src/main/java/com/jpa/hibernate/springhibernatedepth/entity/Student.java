@@ -3,6 +3,7 @@ package com.jpa.hibernate.springhibernatedepth.entity;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.data.annotation.CreatedDate;
 
+import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -24,6 +25,9 @@ public class Student {
     private Long id;
 
     private String name;
+
+    @Embedded
+    private Address address;
 
     @OneToOne
     private Passport passport;

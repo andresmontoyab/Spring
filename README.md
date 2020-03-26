@@ -16,14 +16,16 @@
     * [Spring JPA](#Spring-JPA)
         * [ORM](#ORM)
         * [Entities](#Entities)
-        * [Entities Manager](#Entities-Manager)
-            * [Persist](#persist)
-            * [Merge](#merge)
-            * [Remove](#remove)
-            * [Flush](#flush)
-            * [Detach](#detach)
-            * [Clear](#clear)
-            * [Refrest](#refresh)
+        * [Entity Manager](#Entity-Manager)
+            * [Methods](#Entity-Manager)
+                * [Persist](#persist)
+                * [Merge](#merge)
+                * [Remove](#remove)
+                * [Flush](#flush)
+                * [Detach](#detach)
+                * [Clear](#clear)
+                * [Refresh](#refresh)
+            * [Entity Life Cycle Methods](#Entity-Life-Cycle-Methods)
         * [Repository](#Repository)
         * [JPQL](#JPQL)
             * [Named Queries](#Named-Queries)
@@ -355,7 +357,71 @@ public class Person {
 }
 ```
 
+## Embedded and Embeddable
+
+There are some scenarios in where there are common fields among tables, so lets say we have two tables, the first one is called
+student and the second one is call school, both of this tables have an address, right?. In that scenarios are we going to create
+the address field in both entities or there is a way to just create it once and work for both?.
+
+The answer is yes, with Embedded and Embeddable, this two annotations works for this kinda problems, let's see an example.
+
+```java
+@Embeddable
+public class Address {
+
+    private String line1;
+    private String line2;
+    private String city;
+
+    public Address() {
+    }
+}
+
+@Entity
+public class School {
+    
+    @Id
+    @GeneratedValue
+    private Long id;
+
+    private String name;
+
+    @Embedded
+    private Address address;
+
+    public School() {
+    }
+
+    public School(String name) {
+        this.name = name;
+    }
+}
+
+@Entity
+public class Student {
+
+    @Id
+    @GeneratedValue
+    private Long id;
+
+    private String name;
+
+    @Embedded
+    private Address address;
+
+    @OneToOne
+    private Passport passport;
+    
+    protected Student() {
+    }
+}
+```
+
+In the above code, both entities are going to have all the fields defined in the Address Embeddable class.
+
 ## Entity Manager
+
+## Methods
 
 Entity manager, manage the entities, that means all the operation that you need to perform in a specific session.
 
@@ -409,6 +475,34 @@ Example step1: persist(), step2: flush(), step3, setValue(), step4 refresh()
 
 If the refresh method is delete it the final info in the db is going to be the info
 in the setValue, but because we are using the refresh the final info is the original.
+
+## Entity Life Cycle Methods
+
+There are some default methods that are related with the entity life cycle.
+
+Basically there are two kind of methods Post and Pre. The post methods are execute after we load, persist, update or remove 
+our information and the pre methods are execute before you persist, update or remove information.
+
+The next list are the life cycle methods
+
+1. PostLoad
+2. PostPersist
+3. PostRemove
+4. PostUpdate
+5. PrePersist
+6. PreRemove
+7. PreUpdate
+
+If you want to use one of this, you have to do it in the repository(where the entity manager is created) and also mark one
+method with one of the above list
+
+
+```java
+@PostLoad
+private void postLoad() {
+    // things here...
+}
+```
 
 ## Repository
 
