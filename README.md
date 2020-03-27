@@ -1819,7 +1819,7 @@ public interface CurrencyExchangeServiceProxy {
 @GetMapping("/currency-exchange/from/{from}/to/{to}")
 public CurrencyConversion retrieveExchangeValue(@RequestParam("from") String from, @RequestParam("to")String to);
 
-                }
+}
 ```
 
 First we must add the anotation @RibbonClient in our Proxy Feign Class, and also we must delete the url parameter in our @FeignClient anotation, as you can notice the Ribbon anotation is going to deal with the url of the service, because the main purpose of Ribbon is to distribute among several instances.
@@ -1835,49 +1835,58 @@ In our properties files we must to set up what are the posible host or instances
 
 1. Dependency.
 
-                <dependency>
-			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-starter-netflix-ribbon</artifactId>
-		</dependency>
+```xml
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-netflix-ribbon</artifactId>
+</dependency>
+```
 
 2. Config rest template bean.
 
+```java
+@Configuration
+public class AppConfig {
 
-                @Configuration
-                public class AppConfig {
-
-                        @Bean("restClient")
-                        @LoadBalanced
-                        public RestTemplate registerRestTemplate() {
-                                return new RestTemplate();
-                        }
-                }
+        @Bean("restClient")
+        @LoadBalanced
+        public RestTemplate registerRestTemplate() {
+                return new RestTemplate();
+        }
+}
+```
 
 3. Call service
 
-                private final RestTemplate restTemplate;
+```java
+private final RestTemplate restTemplate;
 
-                public ItemServiceImpl(RestTemplate restTemplate) {
-                this.restTemplate = restTemplate;
-                }
+public ItemServiceImpl(RestTemplate restTemplate) {
+this.restTemplate = restTemplate;
+}
 
-                @Override
-                public List<Item> findAll() {
-                        List<Product> products = Arrays.asList(restTemplate.getForObject("http://products-service/products", Product[].class));
-                        return products.stream()
-                                .map(product -> new Item(product, 1))
-                                .collect(Collectors.toList());
-                }
-
+@Override
+public List<Item> findAll() {
+        List<Product> products = Arrays.asList(restTemplate.getForObject("http://products-service/products", Product[].class));
+        return products.stream()
+                .map(product -> new Item(product, 1))
+                .collect(Collectors.toList());
+}
+```
+                
 4. Config Properties.
 
-                currency-exchange-service.ribbon.listOfServers=http://localhost:8000,http://localhost:8001
+```properties
+currency-exchange-service.ribbon.listOfServers=http://localhost:8000,http://localhost:8001
+```
 
 # Naming Server
 
 In the previous configuration we add a pool of two host, but what happend if we create another instances in http://localhost:8002, Is our client side able to see this new instance?The answer is No, if we want that our client side see the new instance we must to change the properties file and added the new instance.
 
-                currency-exchange-service.ribbon.listOfServers=http://localhost:8000,http://localhost:8001,http://localhost:8002
+```properties
+currency-exchange-service.ribbon.listOfServers=http://localhost:8000,http://localhost:8001,http://localhost:8002
+```
 
 The previous approach means that every single time that we create a new instance we must to change the properties file, nevertheless this is not the ideal situation, the best approach is that the client side detects the changes in the number of instances dinamically for this reason the Naming Server was create, and in this case we are going to use Eureka Naming Server.
 
@@ -1906,32 +1915,40 @@ In the main class of the project that we just created we must mark the class wit
 
 In order to launch a basic Eureka Server we need to set up some configuration in our properties file.
 
-                spring.application.name=netflix-eureka-naming-server
-                server.port=8761
-                eureka.client.register-with-eureka=false
-                eureka.client.fetch-registry=false
+```properties
+spring.application.name=netflix-eureka-naming-server
+server.port=8761
+eureka.client.register-with-eureka=false
+eureka.client.fetch-registry=false
+```
 
 ## Connect to Eureka Server
 
 1. First in the microservices or project that we want to use the eureka services we must add the next dependency.
 
-        <dependency>
-			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
-        </dependency>
+```xml
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+</dependency>
+```
 
 2. Add in the microservices main class the @EnableDiscoveryClient anotation 
 
 3. Finally configure the properties file in order to let the application know where is eureka.
 
-                eureka.client.service-url.default-zone=http//:localhost:8761/eureka
+```properties
+eureka.client.service-url.default-zone=http//:localhost:8761/eureka
+```
 
 4. Eureka Server with Ribbon.
 
 Did you remember what was the problem that Naming Server fixs? Do not hardcoded information in our properties files, so basically if we want to connect Eureka with Ribbon the only thing that we have to do is delete the hardcoded configuration in our properties files, that is because we already install eureka client and ribbon, so in background they understand each other withouth the neeeded of configuration properties.
 
-                ## Delete or comment the following line
-                currency-exchange-service.ribbon.listOfServers=http://localhost:8000,http://localhost:8001,http://localhost:8002
+```properties
+## Delete or comment the following line
+currency-exchange-service.ribbon.listOfServers=http://localhost:8000,http://localhost:8001,http://localhost:8002
+```
 
 # API-Gateway
 
@@ -1969,9 +1986,11 @@ public class NetflixZuulApiGatewayServerApplication {
 
 3. Config de properties file with require info
 
-                spring.application.name=netflix-zuul-api-gateway-server
-                server.port=8765
-                eureka.client.service-url.default-zone=http//:localhost:8761/eureka
+```properties
+spring.application.name=netflix-zuul-api-gateway-server
+server.port=8765
+eureka.client.service-url.default-zone=http//:localhost:8761/eureka
+```
 
 4. Create FilterClass
 
@@ -2056,10 +2075,12 @@ If we want to achieve a Distributed Tracing System we neeed to assing a unique i
 
 1. Add the dependency in the microservices that are require (all of those microservices where is at least one call.
 
-                <dependency>
-                        <groupId>org.springframework.cloud</groupId>
-                        <artifactId>spring-cloud-starter-sleuth</artifactId>
-                </dependency>
+```xml
+<dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-sleuth</artifactId>
+</dependency>
+```
 
 2. Create a Sampler 
 
@@ -2084,17 +2105,21 @@ Connect microserves to rabbitmq with the zipkin config.
 
 First we need to add the dependency of sleuth-zipkin, this is require to log the information in the format that zipkin is expecting
 
-		<dependency>
-			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-starter-zipkin</artifactId>
-		</dependency>
+```xml
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-zipkin</artifactId>
+</dependency>
+```
 
 Also is required the dependency of RabbitMQ in order to send the information to the zipkin server.
 
-                <dependency>
-			<groupId>org.springframework.amqp</groupId>
-			<artifactId>spring-rabbit</artifactId>
-		</dependency>
+```
+<dependency>
+    <groupId>org.springframework.amqp</groupId>
+    <artifactId>spring-rabbit</artifactId>
+</dependency>
+```
 
 To install Zipkin server we need to follow the next steps:
 
@@ -2116,16 +2141,20 @@ To install Zipkin server we need to follow the next steps:
 
 1. Add dependency
 
-		<dependency>
-			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-starter-netflix-hystrix</artifactId>
-		</dependency>
+```xml
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-netflix-hystrix</artifactId>
+</dependency>
+```
 
 2. Enable Hystrix
 
 Mark the main class with the next annotation
 
-                @EnableHystrix
+```java
+@EnableHystrix
+```
 
 3. Set up controllers
 
