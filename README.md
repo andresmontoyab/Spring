@@ -2,8 +2,8 @@
 
 # Index
 
-* [JPA/JDBC](https://github.com/andresmontoyab/Spring/blob/master/databases/README.md)			 
-* [Spring Cloud](https://github.com/andresmontoyab/Spring/blob/master/spring-cloud/README.md)
+* [JPA/JDBC](https://github.com/andresmontoyab/Spring/blob/master/databases)			 
+* [Spring Cloud](https://github.com/andresmontoyab/Spring/blob/master/spring-cloud)
 
 * [Spring Basic](#Spring-Basic)
 * [Spring and Databases](#Spring-and-Databases)
