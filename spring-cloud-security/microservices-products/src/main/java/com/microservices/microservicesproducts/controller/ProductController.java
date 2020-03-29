@@ -5,8 +5,10 @@ import com.microservices.microservicesproducts.service.IProductService;
 import org.springframework.core.env.Environment;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Hashtable;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,7 +24,7 @@ public class ProductController {
     }
 
     @GetMapping("/products")
-    public List<Product> findAll(){
+    public @ResponseBody List<Product> findAll(){
         return productService.findAll().stream()
                 .map(product ->
                 {
@@ -36,6 +38,8 @@ public class ProductController {
     public Product findById(@PathVariable Long id){
         Product product = productService.findById(id);
         product.setPort(Integer.parseInt(environment.getProperty("local.server.port")));
+        Hashtable
         return productService.findById(id);
+
     }
 }
