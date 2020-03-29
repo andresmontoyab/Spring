@@ -1,9 +1,5 @@
 # Spring Documentation
 
-# Index
-
-* [JPA/JDBC](https://github.com/user/repo/blob/master/databases/README.md)
-
 * [Spring Basic](#Spring-Basic)
 * [Spring and Databases](#Spring-and-Databases)
     * [Setup Project](#Setup-database-project)
