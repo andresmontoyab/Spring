@@ -42,6 +42,9 @@
             * [Table per class](#Table-per-class)
             * [Joined](#Joined )
             * [MappedSuperClass](#MappedSuperClass)
+		* [Locking](#Locking)	
+			* [Optimistic Locking](#Optimistic-Locking)		
+			* [Pessimistic Locking](#Pessimistic-Locking)	
         * [Transaction Management](#Transaction-Management)
             * [Isolation Problems](#Isolation-Problems)
             * [Isolation Levels](#Isolation-Levels)
@@ -1214,6 +1217,194 @@ so the difference between MapSuerclass and Table per class is that for Table per
 class is an entity and there is an inheritance relationship among the abstract class and the concrete, but in the
 mappedSuperClass there isn´t.
 
+## Locking
+
+In real world almost all the application have to deal with concurrency problems, in order to avoid those kind of problems we can think in two kind of solutions, 
+the isolations level or lock the data that we need in the moment.
+
+Lock basically are some solutions in where we can restrict the access to specfic data in the database in order to keep consistency.
+
+## Optimistic Locking
+
+1. In order to use optimistic locking, we need to have an entity including a property with @Version annotation
+
+2. Optimistic locking is based on detecting changes on entities by checking their version attribute
+
+3. If any concurrent update takes place, OptmisticLockException occurs. After that, we can retry updating the data.
+
+```java
+@Entity
+public class Student {
+ 
+    @Id
+    private Long id;
+ 
+    private String name;
+ 
+    private String lastName;
+ 
+    @Version
+    private Integer version;
+ 
+    // getters and setters
+ 
+}
+```
+
+There are some rules if we want to use the optimistic lock
+
+* Each entity must have only one version attribute.
+
+* Type of version attribute must be: int, Integer, long, Long, short, Short or java.sql.Timestamp.
+
+## Lock Modes
+
+JPA provides us with two different optimistic lock modes (and two aliases):
+
+1. OPTIMISTIC – READ : 
+
+OPTIMISTIC or READ will ensure the other object has not been updated at the time of your commit.
+
+2. OPTIMISTIC_FORCE_INCREMENT - WRITE:
+
+OPTIMISTIC_FORCE_INCREMENT will ensure the other object has not been updated, and will increment its version on commit.
+
+We can find all types listed above in the LockModeType class.
+
+Example of using optimistic lock
+
+```java 
+// Using em.find()
+entityManager.find(Student.class, studentId, LockModeType.OPTIMISTIC);
+
+// Using a create query
+Query query = entityManager.createQuery("from Student where id = :id");
+query.setParameter("id", studentId);
+query.setLockMode(LockModeType.OPTIMISTIC_INCREMENT);
+query.getResultList()
+
+// Explicit Locking
+Student student = entityManager.find(Student.class, id);
+entityManager.lock(student, LockModeType.OPTIMISTIC);
+
+// Named Query
+@NamedQuery(name="optimisticLock",
+  query="SELECT s FROM Student s WHERE s.id LIKE :id",
+  lockMode = WRITE)
+```
+
+One last thought about the optimistic lock is that because with this kind of lock we are not locking any table or data, it is not posible
+deadlocks with this approach.
+
+## Pessimistic Locking
+
+We can use a pessimistic lock to ensure that no other transactions can modify or delete reserved data.
+
+There are two types of locks we can retain: an exclusive lock and a shared lock. We could read but not write in data when someone else holds a shared lock. 
+In order to modify or delete the reserved data, we need to have an exclusive lock.
+
+## Lock Modes
+
+1. PESSIMISTIC_READ: Allows us to obtain a shared lock and prevent the data from being updated or deleted. We won't be able to make any updates or deletes though.
+
+If we want to update the data we need to use a PESSIMISTIC_WRITE LcokMode.
+
+2. PESSIMISTIC_WRITE: Allows us to obtain an exclusive lock and prevent the data from being read, updated or deleted.
+
+Any transaction that needs to acquire a lock on data and make changes to it should obtain the PESSIMISTIC_WRITE lock. According to the JPA specification, 
+holding PESSIMISTIC_WRITE lock will prevent other transactions from reading, updating or deleting the data.
+
+3. PESSIMISTIC_FORCE_INCREMENT: Works like PESSIMISTIC_WRITE and it additionally increments a version attribute of a versioned entity
+
+This lock works similarly to PESSIMISTIC_WRITE, but it was introduced to cooperate with versioned entities – entities which have an attribute annotated with @Version.
+
+Examples
+
+```java
+// em.find()
+entityManager.find(Student.class, studentId, LockModeType.PESSIMISTIC_READ);
+
+// Using a create query
+Query query = entityManager.createQuery("from Student where studentId = :studentId");
+query.setParameter("studentId", studentId);
+query.setLockMode(LockModeType.PESSIMISTIC_WRITE);
+
+// Explicit Locking
+tudent resultStudent = entityManager.find(Student.class, studentId);
+entityManager.lock(resultStudent, LockModeType.PESSIMISTIC_WRITE);
+query.getResultList()
+
+// With Nam,e
+@NamedQuery(name="lockStudent",
+  query="SELECT s FROM Student s WHERE s.id LIKE :studentId",
+  lockMode = PESSIMISTIC_READ)
+```
+
+
+## Lock Scope
+
+Lock scope parameter defines how to deal with locking relationships of the locked entity
+
+### PessimisticLockScope.NORMAL
+
+We should know that the PessimisticLockScope.NORMAL is the default scope. With this locking scope, 
+we lock the entity itself. When used with joined inheritance it also locks the ancestors.
+
+```java
+@Entity
+@Inheritance(strategy = InheritanceType.JOINED)
+public class Person {
+ 
+    @Id
+    private Long id;
+    private String name;
+    private String lastName;
+ 
+    // getters and setters
+}
+ 
+@Entity
+public class Employee extends Person {
+ 
+    private BigDecimal salary;
+ 
+    // getters and setters
+}
+```
+
+### PessimisticLockScope.EXTENDED
+
+The EXTENDED scope covers the same functionality as NORMAL. In addition, it's able to block related entities in a join table.
+
+```java
+@Entity
+public class Customer {
+ 
+    @Id
+    private Long customerId;
+    private String name;
+    private String lastName;
+    @ElementCollection
+    @CollectionTable(name = "customer_address")
+    private List<Address> addressList;
+ 
+    // getters and setters
+}
+ 
+@Embeddable
+public class Address {
+ 
+    private String country;
+    private String city;
+ 
+    // getters and setters
+}
+```
+
+With the above code, for the both entities Customer and also customer_address is going to be create a lock.
+
+Another interesting fact we should be aware of is that not all persistence providers support lock scopes. (Hibernate does not support it)
+
 ## Transaction Management
 
 Let's talk now about transactions, this is one of the most important concepts when we are talking about database, a transaction is
@@ -1224,7 +1415,7 @@ Example: The "transfer" money transaction have two steps
 1. Withdraw money from account A 
 2. Deposit money in the account b. 
 
-But with this transaction arises one questions, What happend if the second operation fails? What the application should do?
+But with this transaction arises one question, What happend if the second operation fails? What the application should do?
 
 In the above scenarios the application should rollback(Revert all the changes to the initial status.), but if both steps(all steps)
 in the transacction finish sucessfully the aplication must commit the changes (preserve the changes in the db.)
@@ -1594,3 +1785,4 @@ In the above solution we set up that every time that the method "retrieveCourses
 to create a graph in where we say "We want also the students", and with this method, we can leave the relationship as lazy
 and only called the students when we needed.
  
+    
