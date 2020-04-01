@@ -8,4 +8,5 @@ public interface ItemService {
 
     List<Item> findAll();
     Item findById(Long id, Integer amount);
+    Item findByIdtimeout();
 }

@@ -29,7 +29,4 @@ public class Item {
         this.amount = amount;
     }
 
-    public Double getTotal() {
-        return product.getPrice() * amount.doubleValue();
-    }
 }

@@ -38,8 +38,14 @@ public class ProductController {
     public Product findById(@PathVariable Long id){
         Product product = productService.findById(id);
         product.setPort(Integer.parseInt(environment.getProperty("local.server.port")));
-        Hashtable
         return productService.findById(id);
-
     }
+
+    @GetMapping("/products/timeOut")
+    public  Product findAllTimeOut() throws InterruptedException {
+        Thread.sleep(10000L);
+        return null;
+    }
+
+
 }

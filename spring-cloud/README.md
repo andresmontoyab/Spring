@@ -22,6 +22,9 @@
             * [Zuul-API-Gateway](#Zuul-API-Gateway)  
         * [Distributed Tracing](#Distributed-Tracing)
             * [Spring Cloud Sleuth](#Spring-Cloud-Sleuth)
+        * [Fault Tolerance](#Fault-Tolerance)
+            * [Hystrix](#Hystrix)
+            
 
     
 # Spring Cloud
@@ -79,8 +82,10 @@ https://stackoverflow.com/questions/23058448/linked-files-and-folder-in-intellij
 
 After all of this we must create the properties file which are going to have the informacion for the specific microservices, in this example is called limits-service:
 
-        limits-service.minimum=8
-        limits-service.maximum=8888
+```properties
+limits-service.minimum=8
+limits-service.maximum=8888
+```
 
 5. Enable config server 
 
@@ -104,10 +109,11 @@ At this point our configuration server should be working and returning the infor
 
 As we said previously spring config server can help us saving properties for different environment, to achieve this we need to create more files with the following structure.
 
-
-        limits-service.properties -> default info, url -> http://localhost:8888/limits-service/default
-        limits-service-dev.properties -> dev info, url -> http://localhost:8888/limits-service/dev
-        limits-service-qa.properties -> qa info, url -> http://localhost:8888/limits-service/qa
+```properties
+limits-service.properties -> default info, url -> http://localhost:8888/limits-service/default
+limits-service-dev.properties -> dev info, url -> http://localhost:8888/limits-service/dev
+limits-service-qa.properties -> qa info, url -> http://localhost:8888/limits-service/qa
+```
 
 so forth.
 
@@ -117,8 +123,10 @@ so forth.
 
 2. We need to start up our config server in the port 8888 or whatever you want and also put the next line in the bootstrap.properties of the microservices
 
-        spring.application.name=limits-service
-        spring.cloud.config.uri=http://localhost:8888
+```properties
+spring.application.name=limits-service
+spring.cloud.config.uri=http://localhost:8888
+```
 
 Where spring.application.name must match with the name of the properties files in the config server and the uri must match with the url of the config server.      
 
@@ -126,7 +134,9 @@ Where spring.application.name must match with the name of the properties files i
 
 In the bootstrap.properties of the microservies
 
-        spring.profiles.active=dev
+```properties
+spring.profiles.active=dev
+```
 
 # Rest Calls        
 
@@ -135,6 +145,7 @@ As you may notices when we are talking about microservices, we need to call seve
 ## Rest Template
 
 Rest template is a tool that let us call other REST service.
+
 ```java
 Map<String, String> uriVariables = new HashMap<>();
         uriVariables.put("from", from);
@@ -163,10 +174,12 @@ In the previous example we had the next steps.
 
 1. Add dependency in pom
 
-        <dependency>
-			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-starter-feign</artifactId>
-		</dependency>
+```xml
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-feign</artifactId>
+</dependency>
+```
 
 2. Enable Feign Client
 
@@ -191,12 +204,14 @@ public CurrencyConversion retrieveExchangeValue(@RequestParam("from") String fro
 In this interface you are going to put abstract methods in which you put the URL, parameters and also return type. One important thing to highlight is that you must use @RequesParam("parameter_name").
 
 4. Use the proxy.
+
 ```java
 @Autowired
 CurrencyExchangeServiceProxy currencyExchangeServiceProxy;
 
 CurrencyConversion response = currencyExchangeServiceProxy.retrieveExchangeValue(from, to);
 ```
+
 # Client Side Load Balancing
 
 ## Ribbon & Feign
@@ -229,7 +244,9 @@ First we must add the anotation @RibbonClient in our Proxy Feign Class, and also
 
 3. Config Properties.
 
-                currency-exchange-service.ribbon.listOfServers=http://localhost:8000,http://localhost:8001
+```properties
+currency-exchange-service.ribbon.listOfServers=http://localhost:8000,http://localhost:8001
+```
 
 In our properties files we must to set up what are the posible host or instances in which the application or microservices is runnig.        
 
@@ -346,12 +363,36 @@ eureka.client.service-url.default-zone=http//:localhost:8761/eureka
 
 4. Eureka Server with Ribbon.
 
-Did you remember what was the problem that Naming Server fixs? Do not hardcoded information in our properties files, so basically if we want to connect Eureka with Ribbon the only thing that we have to do is delete the hardcoded configuration in our properties files, that is because we already install eureka client and ribbon, so in background they understand each other withouth the neeeded of configuration properties.
+Did you remember what was the problem that Naming Server fixs? Do not hardcoded information in our properties files, 
+so basically if we want to connect Eureka with Ribbon the only thing that we have to do is delete the hardcoded configuration 
+in our properties files, that is because we already install eureka client and ribbon, so in background they understand
+each other withouth the neeeded of configuration properties.
 
 ```properties
 ## Delete or comment the following line
 currency-exchange-service.ribbon.listOfServers=http://localhost:8000,http://localhost:8001,http://localhost:8002
 ```
+
+## Setup Port Dynamically
+
+With the Eureka and Ribbon configurations we don't need to harcoded the instances in where the application are running,
+eureka is always going to tell where instances are up, but so far we are starting up the instances with harcoded ports, in
+order to set those port dynamically we can follow the next steps:
+
+1. In our application properties set de port properties as random
+
+```properties
+server.port=${PORT:0}
+```
+
+2. In the application properties set instnace id property as random too
+
+```properties
+eureka.instance.instance-id=${spring.application.name}:${eureka.instance.instance_id:${random.value}}
+```
+
+With these two properties every time that we start-up a new instnaces, this instances are going to have a new random 
+available port and also are going to be registry in eureka.
 
 # API-Gateway
 
@@ -538,9 +579,20 @@ To install Zipkin server we need to follow the next steps:
 3. Open http://localhost:9411/zipkin/
 
 
-# Faul Tolerance
+# Fault Tolerance
+
+If something among our microservices fails, with fault tolerance we can setup default responses in order to don't break
+the entire system.
+
+For instance we can deal with the next scenarios:
+
+1. Systems or microservices fails.
+2. Latency problems
+3. Timeouts problems
 
 ## Hystrix
+
+With hystrix we can implement the fault tolarence in spring cloud, in order to setup Hystrix we can follow the next steps:
 
 1. Add dependency
 
@@ -563,18 +615,59 @@ Mark the main class with the next annotation
 
 Set up the controller that depend of other services.
 
+Examples:
+
+### Exceptions
+
+If in any microservices there is an expcetion we can handle that event with Hystrix.
+
 ```java
-@GetMapping("/fault-tolerance-example")
+
+        // Setup the Hystrix Command 
+        @GetMapping("/fault-tolerance-example")
         @HystrixCommand(fallbackMethod = "fallbackFaultToleranceExample")
         public CurrencyConversion faultToleranceExample() {
                 throw new RuntimeException("Not Available");
         }
+
+        // Create the fallback method when something happen.                
+        public CurrencyConversion fallbackFaultToleranceExample() {
+                return new CurrencyConversion(1l, "USD", "IDR", BigDecimal.ONE, BigDecimal.TEN, BigDecimal.ZERO, 1 );
+        }
 ```
 
-4. Create the fallback method when something happen.
+### Timeouts
+
+If one endpoint is taking a lot of time, we can handling a timeout with hystrix.
+
+By default the timeout time is set around one second, nevertheless we can modified that value.
+
+```properties
+hystrix.command.default.execution.isolation.thread.timeoutInMilliseconds=9000
+ribbon.ConnectTimeout=2000
+ribbon.ReadTimeout=5000
+```
+
+One thing to keep in mind is that Hystrix is like a wrappe for Ribbon, for this reason the timeout for Hystrix should 
+be equals or greater than the sum of the ribbon properties (ConnectTimeout and ReadTimeout))
 
 ```java
-public CurrencyConversion fallbackFaultToleranceExample() {
-        return new CurrencyConversion(1l, "USD", "IDR", BigDecimal.ONE, BigDecimal.TEN, BigDecimal.ZERO, 1 );
-}
+    @GetMapping("/items/timeOut")
+    @HystrixCommand(fallbackMethod = "timeOutMethod")
+    public Item findByIdTimeout() throws Exception {
+        Thread.sleep(100000);
+        return null;
+    }
+    
+    public Item timeOutMethod() {
+        Item item = new Item();
+        item.setAmount(1);
+        Product product = new Product();
+        product.setId(100L);
+        product.setName("Default product - Time out");
+        item.setProduct(product);
+        return item;
+    }
 ```
+
+With the above code, every time that a timeout happens the timeOutMethod is going to be called.

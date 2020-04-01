@@ -31,4 +31,9 @@ public class ItemServiceFeignImpl implements ItemService {
         Product product = clientProducts.findById(id);
         return new Item(product,amount);
     }
+
+    @Override
+    public Item findByIdtimeout() {
+        return null;
+    }
 }

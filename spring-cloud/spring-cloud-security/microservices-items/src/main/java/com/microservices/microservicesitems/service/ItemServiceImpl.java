@@ -37,4 +37,10 @@ public class ItemServiceImpl implements ItemService{
         Product product = restTemplate.getForObject("http://products-service/products/{id}", Product.class, parameters);
         return new Item(product,amount);
     }
+
+    @Override
+    public Item findByIdtimeout() {
+        Product product = restTemplate.getForObject("http://products-service/products/timeOut", Product.class);
+        return new Item(product , 1);
+    }
 }
