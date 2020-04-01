@@ -50,7 +50,8 @@ Dependencies for the Microservices
 
 # Spring Cloud Config Server
 
-Spring Cloud Config server is a tool that let us save all the properties for the microservices, with this server we can also have the properties for each environment like dev,qa,stage and prod.
+Spring Cloud Config server is a tool that let us save all the properties for the microservices, with this server we can 
+also have the properties for each environment like dev,qa,stage and prod.
 
 ![](https://github.com/andresmontoyab/Spring/blob/master/resources/spring-cloud-config-server-diagram.JPG)
 
@@ -140,7 +141,8 @@ spring.profiles.active=dev
 
 # Rest Calls        
 
-As you may notices when we are talking about microservices, we need to call several in services in order to achieve the expected result, for this reason is very likely that in some of those microservices we need to call other microservices.
+As you may notices when we are talking about microservices, we need to call several API services in order to achieve 
+the expected results. For this reason is very likely that in some of those microservices we need to call other microservices.
 
 ## Rest Template
 
@@ -171,6 +173,8 @@ In the previous example we had the next steps.
 7. Return the entity with the method getBody.
 
 ## FEING
+
+Feing is a tool very similar to restTemplate that let us call REST endpoints.
 
 1. Add dependency in pom
 
@@ -240,7 +244,10 @@ public CurrencyConversion retrieveExchangeValue(@RequestParam("from") String fro
 }
 ```
 
-First we must add the anotation @RibbonClient in our Proxy Feign Class, and also we must delete the url parameter in our @FeignClient anotation, as you can notice the Ribbon anotation is going to deal with the url of the service, because the main purpose of Ribbon is to distribute among several instances.
+* First we must add the anotation @RibbonClient in our Proxy Feign Class. 
+
+* We must delete the url parameter in our @FeignClient anotation, as you can notice the Ribbon anotation is going 
+to deal with the url of the service, because the main purpose of Ribbon is to distribute among several instances. 
 
 3. Config Properties.
 
@@ -302,13 +309,22 @@ currency-exchange-service.ribbon.listOfServers=http://localhost:8000,http://loca
 
 # Naming Server
 
-In the previous configuration we add a pool of two host, but what happend if we create another instances in http://localhost:8002, Is our client side able to see this new instance?The answer is No, if we want that our client side see the new instance we must to change the properties file and added the new instance.
+In the previous configuration we setup a pool of two instances, but what happend if we create another instances. Is the application able to know about the new instance? 
+ 
+Because the instances are harcoded the application is not going to be able to see the new instances and in order to solve
+this we have two options:
+
+1. Turn-down our application and add the new instance url in our properties.
+2. Setup an Naming Server(Eureka) that can work with Ribbon an update the pool of connection automatically.
+
 
 ```properties
 currency-exchange-service.ribbon.listOfServers=http://localhost:8000,http://localhost:8001,http://localhost:8002
 ```
 
-The previous approach means that every single time that we create a new instance we must to change the properties file, nevertheless this is not the ideal situation, the best approach is that the client side detects the changes in the number of instances dinamically for this reason the Naming Server was create, and in this case we are going to use Eureka Naming Server.
+The previous approach means that every single time that we create a new instance we must to change the properties file, 
+nevertheless this is not the ideal situation, the best approach is that the client side detects the changes in the 
+number of instances dinamically for this reason the Naming Server was create, and in this case we are going to use Eureka Naming Server.
 
 ## How it works?
 
@@ -375,8 +391,8 @@ currency-exchange-service.ribbon.listOfServers=http://localhost:8000,http://loca
 
 ## Setup Port Dynamically
 
-With the Eureka and Ribbon configurations we don't need to harcoded the instances in where the application are running,
-eureka is always going to tell where instances are up, but so far we are starting up the instances with harcoded ports, in
+With Eureka and Ribbon configurations we don't need to harcoded the instances in our application properties,
+eureka is always going to know what instances are up, but so far we are starting up the instances with harcoded ports, in
 order to set those port dynamically we can follow the next steps:
 
 1. In our application properties set de port properties as random
@@ -391,7 +407,7 @@ server.port=${PORT:0}
 eureka.instance.instance-id=${spring.application.name}:${eureka.instance.instance_id:${random.value}}
 ```
 
-With these two properties every time that we start-up a new instnaces, this instances are going to have a new random 
+With these two properties every time that we start-up a new instances, these instances are going to have a new random 
 available port and also are going to be registry in eureka.
 
 # API-Gateway
@@ -510,7 +526,7 @@ Final Url
 
 As we saw in previous stages, calling a lot of microservices becomes complex because there are several call chain. Let's say there is a small defect, one service is not really working fine and we dont want to debug it, where can I find the problem?.
 
-One important thing to keep in mind when we are working with a microservices architecture is to implemtent a distributed tracing system, basically is one place in where i can go and find what is happening with a specific request.
+One important thing to keep in mind when we are working with a microservices architecture is to implemtent a distributed tracing system, basically is one place in where we can go and find out what is happening with a specific request.
 
 
 ## Spring Cloud Sleuth
@@ -613,8 +629,6 @@ Mark the main class with the next annotation
 
 3. Set up controllers
 
-Set up the controller that depend of other services.
-
 Examples:
 
 ### Exceptions
@@ -623,17 +637,17 @@ If in any microservices there is an expcetion we can handle that event with Hyst
 
 ```java
 
-        // Setup the Hystrix Command 
-        @GetMapping("/fault-tolerance-example")
-        @HystrixCommand(fallbackMethod = "fallbackFaultToleranceExample")
-        public CurrencyConversion faultToleranceExample() {
-                throw new RuntimeException("Not Available");
-        }
+// Setup the Hystrix Command 
+@GetMapping("/fault-tolerance-example")
+@HystrixCommand(fallbackMethod = "fallbackFaultToleranceExample")
+public CurrencyConversion faultToleranceExample() {
+        throw new RuntimeException("Not Available");
+}
 
-        // Create the fallback method when something happen.                
-        public CurrencyConversion fallbackFaultToleranceExample() {
-                return new CurrencyConversion(1l, "USD", "IDR", BigDecimal.ONE, BigDecimal.TEN, BigDecimal.ZERO, 1 );
-        }
+// Create the fallback method when something happen.                
+public CurrencyConversion fallbackFaultToleranceExample() {
+        return new CurrencyConversion(1l, "USD", "IDR", BigDecimal.ONE, BigDecimal.TEN, BigDecimal.ZERO, 1 );
+}
 ```
 
 ### Timeouts
@@ -652,22 +666,22 @@ One thing to keep in mind is that Hystrix is like a wrappe for Ribbon, for this 
 be equals or greater than the sum of the ribbon properties (ConnectTimeout and ReadTimeout))
 
 ```java
-    @GetMapping("/items/timeOut")
-    @HystrixCommand(fallbackMethod = "timeOutMethod")
-    public Item findByIdTimeout() throws Exception {
-        Thread.sleep(100000);
-        return null;
-    }
-    
-    public Item timeOutMethod() {
-        Item item = new Item();
-        item.setAmount(1);
-        Product product = new Product();
-        product.setId(100L);
-        product.setName("Default product - Time out");
-        item.setProduct(product);
-        return item;
-    }
+@GetMapping("/items/timeOut")
+@HystrixCommand(fallbackMethod = "timeOutMethod")
+public Item findByIdTimeout() throws Exception {
+    Thread.sleep(100000);
+    return null;
+}
+
+public Item timeOutMethod() {
+    Item item = new Item();
+    item.setAmount(1);
+    Product product = new Product();
+    product.setId(100L);
+    product.setName("Default product - Time out");
+    item.setProduct(product);
+    return item;
+}
 ```
 
 With the above code, every time that a timeout happens the timeOutMethod is going to be called.
