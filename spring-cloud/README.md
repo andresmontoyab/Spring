@@ -20,6 +20,9 @@
                 * [Connect to Eureka Server](#Connect-to-Eureka-Server) 
         * [API Gateway](#API-Gateway)  
             * [Zuul-API-Gateway](#Zuul-API-Gateway)  
+                * [Setup Zuul](#Setup-Zuul)
+                * [Setup Microservices Paths](#Setup-Zuul)
+                * [Filters](#Filters)  
         * [Distributed Tracing](#Distributed-Tracing)
             * [Spring Cloud Sleuth](#Spring-Cloud-Sleuth)
         * [Fault Tolerance](#Fault-Tolerance)
@@ -172,7 +175,7 @@ In the previous example we had the next steps.
 6. Create an object ResponseEntity<Entity> in where you are going to store the answer.
 7. Return the entity with the method getBody.
 
-## FEING
+## Feing
 
 Feing is a tool very similar to restTemplate that let us call REST endpoints.
 
@@ -258,7 +261,6 @@ currency-exchange-service.ribbon.listOfServers=http://localhost:8000,http://loca
 In our properties files we must to set up what are the posible host or instances in which the application or microservices is runnig.        
 
 ## Ribbon & Rest Template
-
 
 1. Dependency.
 
@@ -412,15 +414,28 @@ available port and also are going to be registry in eureka.
 
 # API-Gateway
 
-Are different function that are going to be applied in the middle of the communication of each microservices as:
+An API Gateway is a server that is the single entry point into the system. It is similar to the Facade pattern from object‑oriented design. 
 
-1. Authentication, authorization
-2. Tracing.
-3. Fault Tolerance.
+The API Gateway encapsulates the internal system architecture and provides an API that is tailored to each client.
 
-Often this function need to be intercepted to be proceced!. 
+![](https://github.com/andresmontoyab/Spring/blob/master/resources/api-gateway.PNG) 
+
+It might have other responsibilities such as :
+
+1. Authentication.
+
+2. Monitoring. 
+
+3. Load balancing.
+ 
+4. Caching.
 
 ## Zuul API Gateway 
+
+Zuul Server is an API Gateway application. It handles all the requests and performs the dynamic routing of microservice 
+applications. It works as a front door for all the requests
+
+## Setup Zuul
 
 1. First you should go to https://start.spring.io/ and create a project with the next dependencies:
 
@@ -452,7 +467,38 @@ server.port=8765
 eureka.client.service-url.default-zone=http//:localhost:8761/eureka
 ```
 
-4. Create FilterClass
+## Setup Microservices Paths
+
+
+## Sending Request
+ 
+At this point zuul should be working as expected, but there is something else that we have to hightlight, if we want to see the zuul filtering, we have to use a different URL for each microservices, let's see an example:
+
+Original URL for two microservices:
+
+* http://localhost:8000/currency-exchange/from/USD/to/INR
+* http://localhost:8100/currency-converter-feign/from/USD/to/INR/quantity/200
+
+If we execute the previous url zuul is not going to be executed.
+
+In order to execute the zuul filtering whe must use a new kind of urls that are going to be build in base of our zuul server and our microservices.
+
+Final Url Structure:
+
+* {zuul-url}/{app-name}/{service-url}
+
+Example
+
+* zuul-url -> localhost:8765
+* app-name -> currency-exchange-service
+* service-url -> We could take this parameter from the Original url -> currency-exchange/from/USD/to/INR
+
+Final Url
+
+* http://localhost:8765/currency-exchange-service/currency-exchange/from/USD/to/INR
+
+## Filters
+
 
 ```java
 @Component
@@ -495,32 +541,6 @@ In the previous code we can notice the next things.
 * shouldFilter is a flag in which we set up if the filter is going to be applied.
 * run is the main method in which all the filtering is define.
 
-5. Executing Request with Zuul
-
-At this point zuul should be working as expected, but there is something else that we have to hightlight, if we want to see the zuul filtering, we have to use a different URL for each microservices, let's see an example:
-
-Original URL for two microservices:
-
-* http://localhost:8000/currency-exchange/from/USD/to/INR
-* http://localhost:8100/currency-converter-feign/from/USD/to/INR/quantity/200
-
-If we execute the previous url zuul is not going to be executed.
-
-In order to execute the zuul filtering whe must use a new kind of urls that are going to be build in base of our zuul server and our microservices.
-
-Final Url Structure:
-
-* {zuul-url}/{app-name}/{service-url}
-
-Example
-
-* zuul-url -> localhost:8765
-* app-name -> currency-exchange-service
-* service-url -> We could take this parameter from the Original url -> currency-exchange/from/USD/to/INR
-
-Final Url
-
-* http://localhost:8765/currency-exchange-service/currency-exchange/from/USD/to/INR
 
 # Distributed Tracing
 
