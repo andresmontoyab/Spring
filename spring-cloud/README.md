@@ -23,6 +23,9 @@
                 * [Setup Zuul](#Setup-Zuul)
                 * [Setup Microservices Paths](#Setup-Zuul)
                 * [Filters](#Filters)  
+                    * [Pre](#Pre)  
+                    * [Post](#Post)  
+                    * [Route](#Route)  
         * [Distributed Tracing](#Distributed-Tracing)
             * [Spring Cloud Sleuth](#Spring-Cloud-Sleuth)
         * [Fault Tolerance](#Fault-Tolerance)
@@ -550,6 +553,24 @@ Final Url
 When we are using Zuul one of the main features are the filters, in where the Api-gateweay can process the request in different
 stages, there are three kinds of filter: Pre, Post and Route
 
+In order to create a custom filter we need to keep in mind the next rules: 
+
+1. The Filter class must extend the Abstract Class ZuulFilter.
+
+2. The ZuulFilter Abstract class has four abstract methods, filterType, filterOrder, shouldFilter, run
+
+3. filterType could be pre -> means to execute the filter just when the request come.
+
+4. filterType could be post -> means to execute the filter just when the request finish.
+
+5. filterType could be error -> means to execute the filter just when the request is an error.
+
+6. filterOrder gives a priority among the different ZuulFilter implementations, an order in which all the filter are going to be executed.}
+
+7. shouldFilter is a flag in which we set up if the filter is going to be applied.
+
+8. run is the main method in which all the filtering is define.
+
 ### Pre
 
 The "Pre" filter is going to be execute just before to route the request(Usually is used to check the request).
@@ -586,6 +607,8 @@ public class ZuulLoggingFilter extends ZuulFilter {
 
 ### Post
 
+The "Post" filter is going to be execute just after to route the request(Usually is used to modified the response).
+
 ```java
 @Component
 public class ZuulLoggingFilter extends ZuulFilter {
@@ -616,31 +639,10 @@ public class ZuulLoggingFilter extends ZuulFilter {
 }
 ```
 
-The "Post" filter is going to be execute just after to route the request(Usually is used to modified the response).
-
 ### Route
 
 The "Route" filter is going to be execute to route the request(Comunication with microservices).
-
-                
-In the previous examples we can highlight the next details.
-
-1. The Filter class must extend the Abstract Class ZuulFilter.
-
-2. The ZuulFilter Abstract class has four abstract methods, filterType, filterOrder, shouldFilter, run
-
-3. filterType could be pre -> means to execute the filter just when the request come.
-
-4. filterType could be post -> means to execute the filter just when the request finish.
-
-5. filterType could be error -> means to execute the filter just when the request is an error.
-
-6. filterOrder gives a priority among the different ZuulFilter implementations, an order in which all the filter are going to be executed.}
-
-7. shouldFilter is a flag in which we set up if the filter is going to be applied.
-
-8. run is the main method in which all the filtering is define.
-
+      
 
 # Distributed Tracing
 
