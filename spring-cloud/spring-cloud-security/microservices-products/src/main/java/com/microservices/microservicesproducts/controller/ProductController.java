@@ -23,7 +23,7 @@ public class ProductController {
         this.environment = environment;
     }
 
-    @GetMapping("/products")
+    @GetMapping("/")
     public @ResponseBody List<Product> findAll(){
         return productService.findAll().stream()
                 .map(product ->
@@ -34,14 +34,14 @@ public class ProductController {
                 .collect(Collectors.toList());
     }
 
-    @GetMapping("/products/{id}")
+    @GetMapping("/{id}")
     public Product findById(@PathVariable Long id){
         Product product = productService.findById(id);
         product.setPort(Integer.parseInt(environment.getProperty("local.server.port")));
         return productService.findById(id);
     }
 
-    @GetMapping("/products/timeOut")
+    @GetMapping("/timeOut")
     public  Product findAllTimeOut() throws InterruptedException {
         Thread.sleep(10000L);
         return null;

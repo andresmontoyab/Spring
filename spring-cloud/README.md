@@ -469,6 +469,54 @@ eureka.client.service-url.default-zone=http//:localhost:8761/eureka
 
 ## Setup Microservices Paths
 
+Zuul is the entry point for all the request, for this reason we need to setup the routes of the inner microservices or API with the
+url that zuul are going to expose.
+
+Let's say that we have two microservices, products and items and with the following features:
+
+1. Each microservices has its own controller.
+
+2. Each microservices has the application name already setup.
+
+Items -> application properties
+
+```properties
+spring.application.name=item-service
+server.port=${PORT:0}
+eureka.instance.instance-id=${spring.application.name}:${eureka.instance.instance_id:${random.value}}
+eureka.client.service-url.default-zone=http//:localhost:8761/eureka
+```
+
+Products -> application properties
+
+```properties
+spring.application.name=products-service
+server.port=${PORT:0}
+eureka.instance.instance-id=${spring.application.name}:${eureka.instance.instance_id:${random.value}}
+eureka.client.service-url.default-zone=http//:localhost:8761/eureka
+```
+
+With the previous configuration we are able to setup the microservices' paths in zuul.
+
+Basically we just need to add the next configuration in our properties.
+
+```properties
+zuul.routes.products.service-id=products-service
+zuul.routes.products.path=/api/products/**
+
+zuul.routes.items.service-id=item-service
+zuul.routes.items.path=/api/items/**
+```
+
+With the above code zuul is going to check in eureka what are the instances for the application with ids
+"products-service" and "items-service" for those application Zuul is going to route all the request that cames from
+"/api/products/**" and "/api/items/**" respectively.
+
+For instance:
+
+* GET Http Method, url: host/api/products/findAll. This request is going to search for an endpoint created in the products application 
+un which the url is findAll
+
 
 ## Sending Request
  
@@ -497,8 +545,14 @@ Final Url
 
 * http://localhost:8765/currency-exchange-service/currency-exchange/from/USD/to/INR
 
-## Filters
+## Filter
 
+When we are using Zuul one of the main features are the filters, in where the Api-gateweay can process the request in different
+stages, there are three kinds of filter: Pre, Post and Route
+
+### Pre
+
+The "Pre" filter is going to be execute just before to route the request(Usually is used to check the request).
 
 ```java
 @Component
@@ -529,17 +583,63 @@ public class ZuulLoggingFilter extends ZuulFilter {
         }
 }
 ```
-                
-In the previous code we can notice the next things.
 
-* The Filter class must extend the Abstract Class ZuulFilter.
-* The ZuulFilter Abstract class has four abstract methods, filterType, filterOrder, shouldFilter, run
-* filterType could be pre -> means to execute the filter just when the request come.
-* filterType could be post -> means to execute the filter just when the request finish.
-* filterType could be error -> means to execute the filter just when the request is an error.
-* filterOrder gives a priority among the different ZuulFilter implementations, an order in which all the filter are going to be executed.}
-* shouldFilter is a flag in which we set up if the filter is going to be applied.
-* run is the main method in which all the filtering is define.
+### Post
+
+```java
+@Component
+public class ZuulLoggingFilter extends ZuulFilter {
+
+        private Logger logger = LoggerFactory.getLogger(this.getClass());
+
+        @Override
+        public String filterType() {
+                return "post";
+        }
+
+        @Override
+        public int filterOrder() {
+                return 1;
+        }
+
+        @Override
+        public boolean shouldFilter() {
+                return true;
+        }
+
+        @Override
+        public Object run() throws ZuulException {
+                HttpServletRequest request = RequestContext.getCurrentContext().getRequest();
+                logger.info("request -> {} request uri -> {}", request, request.getRequestURI());
+                return null;
+        }
+}
+```
+
+The "Post" filter is going to be execute just after to route the request(Usually is used to modified the response).
+
+### Route
+
+The "Route" filter is going to be execute to route the request(Comunication with microservices).
+
+                
+In the previous examples we can highlight the next details.
+
+1. The Filter class must extend the Abstract Class ZuulFilter.
+
+2. The ZuulFilter Abstract class has four abstract methods, filterType, filterOrder, shouldFilter, run
+
+3. filterType could be pre -> means to execute the filter just when the request come.
+
+4. filterType could be post -> means to execute the filter just when the request finish.
+
+5. filterType could be error -> means to execute the filter just when the request is an error.
+
+6. filterOrder gives a priority among the different ZuulFilter implementations, an order in which all the filter are going to be executed.}
+
+7. shouldFilter is a flag in which we set up if the filter is going to be applied.
+
+8. run is the main method in which all the filtering is define.
 
 
 # Distributed Tracing

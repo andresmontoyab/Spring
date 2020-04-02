@@ -24,7 +24,7 @@ public class ItemServiceImpl implements ItemService{
 
     @Override
     public List<Item> findAll() {
-        List<Product> products = Arrays.asList(restTemplate.getForObject("http://products-service/products", Product[].class));
+        List<Product> products = Arrays.asList(restTemplate.getForObject("http://products-service/", Product[].class));
         return products.stream()
                 .map(product -> new Item(product, 1))
                 .collect(Collectors.toList());
@@ -34,13 +34,13 @@ public class ItemServiceImpl implements ItemService{
     public Item findById(Long id, Integer amount) {
         Map<String, String> parameters = new HashMap<>();
         parameters.put("id", id.toString());
-        Product product = restTemplate.getForObject("http://products-service/products/{id}", Product.class, parameters);
+        Product product = restTemplate.getForObject("http://products-service/{id}", Product.class, parameters);
         return new Item(product,amount);
     }
 
     @Override
     public Item findByIdtimeout() {
-        Product product = restTemplate.getForObject("http://products-service/products/timeOut", Product.class);
+        Product product = restTemplate.getForObject("http://products-service/timeOut", Product.class);
         return new Item(product , 1);
     }
 }

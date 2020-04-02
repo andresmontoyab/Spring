@@ -19,23 +19,23 @@ public class ItemController {
         this.itemService = itemService;
     }
 
-    @GetMapping("/items")
+    @GetMapping("/")
     public List<Item> findAll() {
         return itemService.findAll();
     }
 
-    @GetMapping("/items/{id}/amount/{amount}")
+    @GetMapping("/{id}/amount/{amount}")
     public Item findById(@PathVariable Long id, @PathVariable Integer amount) {
         return itemService.findById(id, amount);
     }
 
-    @GetMapping("/items/systemFails")
+    @GetMapping("/systemFails")
     @HystrixCommand(fallbackMethod = "systemFailsMethod")
     public Item findByIdSystemFails() throws Exception {
         throw new Exception("The application Fails");
     }
 
-    @GetMapping("/items/timeOut")
+    @GetMapping("/timeOut")
     @HystrixCommand(fallbackMethod = "timeOutMethod")
     public Item findByIdTimeout() throws Exception {
         Thread.sleep(10000);
