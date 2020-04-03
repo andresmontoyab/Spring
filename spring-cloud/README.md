@@ -5,8 +5,10 @@
     * [Creating Microservices](#Creating-Microservices)
         * [Spring Cloud Config Server](#Spring-Cloud-Config-Server)
             * [Create Config Server](#Create-Config-Server)
-            * [Git and Config Server](#Git-and-Config-Server)
-            * [Overrinding properties](#Overrinding-properties)
+            * [Initialize Git Repository](#Initialize-Git-Repository)
+            * [Create Properties](#Create-Properties)
+            * [Connecting Microservices with Config Server](#Connecting-Microservices-with-Config-Server)
+            * [Refresh Scope](#Refresh-Scope)
         * [Rest Calls](#Rest-Calls)    
             * [Rest Template](#Rest-Template)    
             * [FEING](#FEING)
@@ -68,32 +70,7 @@ Dependencies:
 
 1. Config Server
 
-## Git and Config Server
-
-1. Create folder 
-
-        mkdir git-config-info
-
-2. Init git
-
-        git init
-
-3. Create a Linked Source
-
-A linked source is a module in our project that is pointing to a specific folder
-
-https://stackoverflow.com/questions/23058448/linked-files-and-folder-in-intellij
-
-4. Properties file.
-
-After all of this we must create the properties file which are going to have the informacion for the specific microservices, in this example is called limits-service:
-
-```properties
-limits-service.minimum=8
-limits-service.maximum=8888
-```
-
-5. Enable config server 
+2. Enable Config Server
 
 ```java
 @EnableConfigServer
@@ -107,42 +84,176 @@ public class SpringCloudConfigServerApplication {
 }
 ```
 
-6. Run the application
+## Initialize Git Repository
 
-At this point our configuration server should be working and returning the informacion in the url http://localhost:8888/limits-service/default
+In order to setup our Spring Config Server, we need to create a local/remote git repository in where we are going to 
+store our configurations files.
 
-## Overrinding properties
+1. Choose a path in where you want to create your local/remote repository.
 
-As we said previously spring config server can help us saving properties for different environment, to achieve this we need to create more files with the following structure.
+2. In that path create a specific folder to store all the configurations.
 
-```properties
-limits-service.properties -> default info, url -> http://localhost:8888/limits-service/default
-limits-service-dev.properties -> dev info, url -> http://localhost:8888/limits-service/dev
-limits-service-qa.properties -> qa info, url -> http://localhost:8888/limits-service/qa
+```jshelllanguage
+mkdir {folder.name}
 ```
 
-so forth.
+Where {folder.name} is the name that you want for your folder
+
+2. When you have your folder already create, move into the folder and init git (For this step you must have git installed)
+
+```jshelllanguage
+cd {folder.name}
+git init
+```
+
+3. Setup Git directory in config server .properties.
+
+In order to linked the previous local/remote repository created with our config server we need to add the next properties.
+
+```properties
+spring.application.name={app.name}
+server.port={port}
+spring.cloud.config.server.git.uri={git.folder.path}
+```
+
+Where:
+
+{app.name} is the name that you want for your config server, Example : config-server
+{port} is the port number in where you want that the application runs, Example : 8888
+{git.folder.path} is the  route in where the folder was created, Example: file:///C:/Users/andres.montoya/Documents/config 
+
+## Create Properties
+
+Now we are able to create our properties files, these files must be created inside our git folder and these properties 
+file could be per application and also per environment.
+
+Let's say that we have a microservices that is called item-service, for that microservice we could create the next properties files.
+
+item-service.properties
+
+```properties
+server.port=8005
+configuration.text=Text for default environment
+```
+
+item-service-dev.properties
+
+```properties
+server.port=8007
+configuration.text=Text for dev environment
+author.name=Andres
+author.lastname=Montoya
+```
+
+item-service-qa.properties
+
+```properties
+server.port=8009
+configuration.text=Text for Qa environment
+author.name=Felipe
+author.lastname=Montoya
+```
+
+As you can see we can create properties files per environment, and all of the files must be in our git repository.
+
+If you want to check the information in your config server you can call to the next enpoint.
+
+{host}/{microservices-name}/{environment}, Example: http://localhost:8888/item-service/dev
 
 ## Connecting Microservices with Config Server
 
-1. Chaging the name of application.properties by bootstrap.properties
+In the previous steps we setup our Spring Config Server and also the git local/remote repository, now is time to connect
+each microservices with the config server, for that we can follow the next steps.
 
-2. We need to start up our config server in the port 8888 or whatever you want and also put the next line in the bootstrap.properties of the microservices
+1. Add the Spring Config Starter dependency 
 
-```properties
-spring.application.name=limits-service
-spring.cloud.config.uri=http://localhost:8888
+```xml
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-config</artifactId>
+</dependency>
 ```
 
-Where spring.application.name must match with the name of the properties files in the config server and the uri must match with the url of the config server.      
+2. Create an bootstrap.properties
 
-## Configuring profiles
-
-In the bootstrap.properties of the microservies
+The bootstrap.properties file has a higher priority than application.properties, in order to use Spring config, we need to
+setup our bootstrap.properties with the next information
 
 ```properties
-spring.profiles.active=dev
+spring.application.name=item-service            ## Name of the microservice
+spring.profiles.active=dev                      ## Profile to use
+spring.cloud.config.uri=http://localhost:8888   ## Url in where the config server is deployed
 ```
+
+The spring.application.name property must match with the files created in the git local/remote repository.
+
+3. Use properties in the microservices.      
+
+```java
+@RestController
+public class ItemController {
+
+    @Value("${configuration.text}")
+    private String text;
+
+    @Value("${author.name}")
+    private String authorName;
+
+    @Value("${author.lastname}")
+    private String authorLastname;
+
+    private final Environment environment;
+
+
+    @GetMapping("/getConfig")
+    public ResponseEntity<?> getConfig(@Value("${server.port}") String port){
+        Map<String,String> jsonValue = new HashMap<>();
+        jsonValue.put("text", text);
+        jsonValue.put("port", port);
+        jsonValue.put("name", authorName);
+        jsonValue.put("lastname", authorLastname);
+        Arrays.asList(environment.getActiveProfiles()).stream()
+                .filter(env -> env.equalsIgnoreCase("dev"))
+                .forEach(x -> jsonValue.put("environment", "We are in dev"));
+        return new ResponseEntity<Map<String, String>>(jsonValue, HttpStatus.OK);
+    }
+}
+```
+
+As you can see in the above code, in our microservice now we are able to use the properties defined in the spring-config-server
+using the @Value annotation and the name of the property.
+
+## Refresh Scope
+
+There is still one more problem, even that our microservices is using the config server,  we must restart the application in order
+to have the last version of our properties, in order to avoid those restart we can use the Refresh Scope annotation, 
+basically means that if we updated some properties we can refresh the scope and those properties
+are going to be updated in the microservices too. 
+
+1. Add Actuator dependency to our microservices.
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-actuator</artifactId>
+</dependency>
+```
+
+2. Mark the classes that we want to refresh with the @RefreshScope Annotation
+
+3. Add the next property to the bootstrap.properties file.
+
+```properties
+management.endpoints.web.exposure.include=*
+```
+
+4. Call the refresh actuator endpoint in order to refresh.
+
+After every update of our properties, we must call the next endpoint, in order to refresh
+
+POST {host:port}/actuator/refresh, Example : POST http://localhost:8005/actuator/refresh
+
+Be aware to use POST Http method.
 
 # Rest Calls        
 
@@ -154,6 +265,7 @@ the expected results. For this reason is very likely that in some of those micro
 Rest template is a tool that let us call other REST service.
 
 ```java
+when we want to change some properties in our config server, in order to avoid those restart we can use something that is called
 Map<String, String> uriVariables = new HashMap<>();
         uriVariables.put("from", from);
         uriVariables.put("to", to);
