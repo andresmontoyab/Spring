@@ -21,7 +21,7 @@
         * [API Gateway](#API-Gateway)  
             * [Zuul-API-Gateway](#Zuul-API-Gateway)  
                 * [Setup Zuul](#Setup-Zuul)
-                * [Setup Microservices Paths](#Setup-Zuul)
+                * [Setup Microservices Paths](#Setup-Microservices-Paths)
                 * [Filters](#Filters)  
                     * [Pre](#Pre)  
                     * [Post](#Post)  
@@ -31,7 +31,6 @@
         * [Fault Tolerance](#Fault-Tolerance)
             * [Hystrix](#Hystrix)
             
-
     
 # Spring Cloud
 
@@ -56,7 +55,7 @@ Dependencies for the Microservices
 
 # Spring Cloud Config Server
 
-Spring Cloud Config server is a tool that let us save all the properties for the microservices, with this server we can 
+Spring Cloud Config Server is a tool in where we can have a central management for the configuration of all the microservices , with this server we can 
 also have the properties for each environment like dev,qa,stage and prod.
 
 ![](https://github.com/andresmontoyab/Spring/blob/master/resources/spring-cloud-config-server-diagram.JPG)
