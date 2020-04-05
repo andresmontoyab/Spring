@@ -1,4 +1,4 @@
-package com.microservices.microservicesproducts.domain.entities;
+package com.spring.commons.appcommons.models.entity;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;

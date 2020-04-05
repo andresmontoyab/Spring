@@ -1,5 +1,7 @@
 package com.microservices.microservicesitems.domain;
 
+import com.spring.commons.appcommons.models.entity.Product;
+
 public class Item {
 
     private Product product;

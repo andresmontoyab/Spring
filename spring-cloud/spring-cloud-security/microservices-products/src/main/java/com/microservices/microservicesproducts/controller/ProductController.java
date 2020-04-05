@@ -1,11 +1,17 @@
 package com.microservices.microservicesproducts.controller;
 
-import com.microservices.microservicesproducts.domain.entities.Product;
+import com.spring.commons.appcommons.models.entity.Product;
 import com.microservices.microservicesproducts.service.IProductService;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Hashtable;
@@ -45,6 +51,27 @@ public class ProductController {
     public  Product findAllTimeOut() throws InterruptedException {
         Thread.sleep(10000L);
         return null;
+    }
+
+    @PostMapping("/create")
+    @ResponseStatus(HttpStatus.OK)
+    public Product createProduct(@RequestBody Product product) {
+        return productService.save(product);
+    }
+
+    @DeleteMapping("/delete/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteProductById(@PathVariable Long id) {
+        productService.deleteById(id);
+    }
+
+    @PutMapping("/update/{id}")
+    @ResponseStatus(HttpStatus.CREATED)
+    public Product updateProduct(@RequestBody Product product, @PathVariable Long id) {
+        Product productServiceById = productService.findById(id);
+        productServiceById.setName(product.getName());
+        productServiceById.setPrice(product.getPrice());
+        return productService.save(productServiceById);
     }
 
 

@@ -1,15 +1,14 @@
 package com.microservices.microservicesitems.service;
 
 import com.microservices.microservicesitems.domain.Item;
-import com.microservices.microservicesitems.domain.Product;
+import com.spring.commons.appcommons.models.entity.Product;
 import com.microservices.microservicesitems.feign.FeignClientProducts;
-import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Service
+@Service("serviceFeign")
 public class ItemServiceFeignImpl implements ItemService {
 
     private final FeignClientProducts clientProducts;
@@ -35,5 +34,20 @@ public class ItemServiceFeignImpl implements ItemService {
     @Override
     public Item findByIdtimeout() {
         return null;
+    }
+
+    @Override
+    public Product save(Product product) {
+        return clientProducts.createProduct(product);
+    }
+
+    @Override
+    public Product update(Product product, Long id) {
+        return clientProducts.updateProduct(product, id);
+    }
+
+    @Override
+    public void delete(Long id) {
+        clientProducts.deleteProduct(id);
     }
 }

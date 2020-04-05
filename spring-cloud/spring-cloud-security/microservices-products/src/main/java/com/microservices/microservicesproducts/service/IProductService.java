@@ -1,12 +1,17 @@
 package com.microservices.microservicesproducts.service;
 
-import com.microservices.microservicesproducts.domain.entities.Product;
+
+import com.spring.commons.appcommons.models.entity.Product;
 
 import java.util.List;
 
 public interface IProductService {
 
-    public List<Product> findAll();
+    List<Product> findAll();
 
-    public Product findById(Long id);
+    Product findById(Long id);
+
+    Product save(Product product);
+
+    public void deleteById(Long id);
 }

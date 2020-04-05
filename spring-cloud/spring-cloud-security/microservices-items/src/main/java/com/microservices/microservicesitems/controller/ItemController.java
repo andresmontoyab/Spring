@@ -1,16 +1,22 @@
 package com.microservices.microservicesitems.controller;
 
 import com.microservices.microservicesitems.domain.Item;
-import com.microservices.microservicesitems.domain.Product;
+import com.spring.commons.appcommons.models.entity.Product;
 import com.microservices.microservicesitems.service.ItemService;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Arrays;
@@ -34,7 +40,7 @@ public class ItemController {
     private final ItemService itemService;
     private final Environment environment;
 
-    public ItemController(ItemService itemService, Environment environment) {
+    public ItemController(@Qualifier("serviceFeign") ItemService itemService, Environment environment) {
         this.itemService = itemService;
         this.environment = environment;
     }
@@ -94,6 +100,25 @@ public class ItemController {
                 .filter(env -> env.equalsIgnoreCase("dev"))
                 .forEach(x -> jsonValue.put("environment", "We are in dev"));
         return new ResponseEntity<Map<String, String>>(jsonValue, HttpStatus.OK);
+    }
+
+    @PostMapping("/create")
+    @ResponseStatus(HttpStatus.CREATED)
+    public Product create(@RequestBody Product product) {
+        return itemService.save(product);
+    }
+
+    @PutMapping("/update/{id}")
+    @ResponseStatus(HttpStatus.CREATED)
+    public Product update(@RequestBody Product product, @PathVariable Long id) {
+        return itemService.update(product, id);
+    }
+
+
+    @DeleteMapping("/delete/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Long id) {
+        itemService.delete(id);
     }
 
 

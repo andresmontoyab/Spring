@@ -32,6 +32,8 @@
             * [Spring Cloud Sleuth](#Spring-Cloud-Sleuth)
         * [Fault Tolerance](#Fault-Tolerance)
             * [Hystrix](#Hystrix)
+        * [Spring Cloud Security](#Spring-Cloud-Security)
+                    
             
     
 # Spring Cloud
@@ -918,3 +920,25 @@ public Item timeOutMethod() {
 ```
 
 With the above code, every time that a timeout happens the timeOutMethod is going to be called.
+
+## Spring Security
+
+IS security framework, deals with authetication and authorization
+
+## JWT
+
+Json Web Token
+
+Is an open standard, to implement security in our application based in REST.
+
+In JWT you can create and verify if the JWT is valid or not.
+
+jwt.io -> In this page we can check a basic JWT.
+
+A JWT is built in three parts.
+
+Header.
+Payload
+Verify Signature.
+
+## OAuth
