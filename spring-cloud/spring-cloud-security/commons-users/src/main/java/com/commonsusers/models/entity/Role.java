@@ -1,4 +1,4 @@
-package com.microservicesuser.model.entity;
+package com.commonsusers.models.entity;
 
 
 import javax.persistence.Column;

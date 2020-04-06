@@ -1,11 +1,14 @@
-package com.microservicesuser.model.entity;
+package com.commonsusers.models.entity;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.ManyToMany;
 import javax.persistence.Table;
+import java.util.List;
 
 @Entity
 @Table(name = "USERS")
@@ -29,6 +32,9 @@ public class User {
 
     @Column(unique = true, length = 50)
     private String email;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    private List<Role> roles;
 
     public Long getId() {
         return id;
@@ -84,5 +90,13 @@ public class User {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public List<Role> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(List<Role> roles) {
+        this.roles = roles;
     }
 }
