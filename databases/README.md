@@ -1627,6 +1627,46 @@ public interface CourseSpringDataRepository extends JpaRepository<Course, Long> 
 }
 ```
 
+In order to call the endpoint we can do it in the next way.
+
+* GET host/courses      -> findAll
+* GET host/courses/1    -> findById
+* POST host/courses     -> save
+* PUT host/courses      -> save
+* DELETE host/courses   -> delete
+* GET host/couses/search/findByName?name=${name.value} -> findByName
+
+If we want to change the search of the custom methods we can use the @RestResource annotations
+
+
+```java
+@RepositoryRestResource(path = "/courses")
+public interface CourseSpringDataRepository extends JpaRepository<Course, Long> {
+
+    @RestResource(path="search-name")
+    List<Course> findByName(@Param("n") String n);
+}
+```
+
+Also in other scenarios we want that these endpoint also return the id of the entities, for that task we need to added
+the next configuration class.
+
+
+```java
+@Configuration
+public class RepositoryConfig implements RepositoryRestConfigurer {
+
+    @Override
+    public void configureRepositoryRestConfiguration(RepositoryRestConfiguration config) {
+        config.exposeIdsFor(User.class, Role.class);
+    }
+}
+```
+
+With this new approach we can use the endpoint in the next way.
+
+* GET host/courses/search/search-name?n={$name.value}
+
 ## Jpa Caching
 
 Usually in applications we need to call external service as database in order to retrieve data that we need, this request
