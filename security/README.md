@@ -18,7 +18,15 @@
             * [Implicit](#Implicit)
             * [Password](#Password)
             * [Refresh](#Refresh)    
-    * [Spring Cloud Security](#Spring-Cloud-Security)
+    * [Example](#Example)    
+		* [Creating API](#Creating-API)    
+		* [Create User Application](#Create User Application)    
+		* [Create OAuthServer](#Create-OAuthServer)    
+			* [Setup Feign Client](#Setup-Feign-Client)    
+			* [Define Authentication Type](#Define-Authentication-Type)    
+			* [Create Authentication Service](#Create-Authentication-Service)    
+			* [Authorization Server Config](#Authorization-Server-Config)    
+		* [Testing OAuthServer](#Testing-OAuthServer)    
 
 # Security
 
@@ -141,7 +149,544 @@ For instance we can define the next scopes in an application
 
 ### Refresh 
 
-## Spring Cloud Security
+## Example
 
-Spring Cloud Security offers a set of primitives for building secure applications and services with minimum fuss.
+Now with this information in mind, we are going to apply the concepts that we saw in the previous sections:
+
+![](https://github.com/andresmontoyab/Spring/blob/master/resources/basic-security-spring.PNG)
+
+
+As we see in the above image we are going to make a real example using Spring framework with OAuth 2.0
+
+1. Client: Is the application who want to use our API(In this case could be a front-end or event postmant)
+2. OAuth Server: Is our authorization server that is going to be created with spring-cloud-security and OAuth 2.0
+3. API: In this example our API or protected resource is the item-microservices.
+4. user-microservices is an application that is going to deal with user and roles.
+
+Let's Start.
+
+## Creating API
+
+In this point we are going to create a very simple API, in this API we are going to deal with the "Item" resource, so let's
+create it.!
+
+Go to https://start.spring.io/ and add the next dependencies:
+
+1. Spring Web.
+
+2. H2 Database
+
+3. Spring Data JPA
+
+4. Rest Repositories
+
+And Download the application!
+
+Let's start with the configuration in our new application.
+
+### Create Domain
+
+In our application, we have to create a new package call it "domain" (Or as you wish) and inside of this folder we are
+going to create the entity Item(our protected resource.)
+
+Should look like:
+
+```java
+@Entity
+public class Item {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String productName;
+
+    private String description;
+
+    private Integer amountAvailable;
+    
+    // setter, getter and constructors
+    
+}
+``` 
+
+### Create Repository and Controller
+
+In our application, we have to create a new package call it "domain" (Or as you wish) and inside of this folder we are
+going to create the repositoy/controller using our previous domian entity.
+
+```java
+@RepositoryRestResource(path = "items")
+public interface ItemRepository extends JpaRepository<Item, Long> {
+}
+``` 
+
+And that's all that we need, at this point we are able to run our application!.
+
+Nevertheless if we create a GET request pointing to the endpoint is going to work, in other words the application
+is not safe.
+
+## Create User Application
+
+This application is going to deal with the user information an their roles, this is require in order to know which kind
+of permission every user has.
+
+Go to https://start.spring.io/ and add the next dependencies:
+
+1. Spring Web.
+
+2. H2 Database
+
+3. Spring Data JPA
+
+4. Rest Repositories
+
+And Download the application!
+
+Let's start with the configuration in our new application.
+
+### Create Domain
+
+As you remember this application is going to deal with user and their roles, for this reason we have two entities, the first
+one is User and the second one is role, let's go to create those entities.
+
+```java
+
+@Entity
+@Table(name = "USERS")
+public class User {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(unique = true, length = 20)
+    private String username;
+
+    @Column(length = 60)
+    private String password;
+
+    private Boolean enabled;
+
+    private String name;
+
+    private String lastname;
+
+    @Column(unique = true, length = 50)
+    private String email;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    private List<Role> roles;
+    
+    // setter, getter and constructors
+    
+}
+
+
+@Entity
+@Table(name = "ROLES")
+public class Role {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(unique = true, length = 30)
+    private String name;
+
+}
+``` 
+
+At this point we already created the entities for our user-microservices, now let's insert some default data using the import.sql
+file in our resources folder.
+
+```sql
+INSERT INTO USERS (USERNAME,PASSWORD,ENABLED,NAME,LASTNAME,EMAIL) VALUES ('Admin', '$2a$10$7cCHdorngQIAX3QvnV95zO.1vsb0bN9/Cxv7dnAdBeUMAGhqtL86u', 1, 'Andres', 'Montoya', 'andres@correo.com');
+INSERT INTO USERS (USERNAME,PASSWORD,ENABLED,NAME,LASTNAME,EMAIL) VALUES ('Andres', '$2a$10$7cCHdorngQIAX3QvnV95zO.1vsb0bN9/Cxv7dnAdBeUMAGhqtL86u', 1, 'Felipe', 'Montoya', 'felipe@correo.com');
+
+INSERT INTO ROLES (NAME) VALUES ('ROLE_USER');
+INSERT INTO ROLES (NAME) VALUES ('ROLE_ADMIN');
+
+INSERT INTO USERS_ROLES  (USER_ID, ROLES_ID) VALUES (1,1);
+INSERT INTO USERS_ROLES  (USER_ID, ROLES_ID) VALUES (1,2);
+INSERT INTO USERS_ROLES  (USER_ID, ROLES_ID) VALUES (2,1);
+```
+
+As you can see with the above queries we have two Users, Admin and Andres.
+
+1. Admin has the both roles, user and admin
+2. Andres just has the user role
+
+### Crete Repository and Controller
+
+The next step is setup our repository layer and also expose our endpoints in order to use them in the OAuth-server application.
+
+```java
+@RepositoryRestResource(path = "users")
+public interface UserRepository extends JpaRepository<User, Long> {
+
+    @RestResource(path = "searchByUsername")
+    public User findByUsername(@Param("username") String username);
+
+    @RestResource(path = "findEnabledUser")
+    public List<User> findByEnabled(@Param("enabled") Boolean enabled);
+}
+```
+
+Check that we create two custom queries in order to two retrieve our user by the username and also the Users availables.
+
+If you want to make a call to one of the custom methods you could do it in the next way:
+
+GET {server}:{port}/users/search/searchByUsername?username=Andres
+
+Example:
+
+http://localhost:8283/users/search/searchByUsername?username=Andres
+
+## Create OAuthServer.
+
+This is the most important, because in this project we are going to setup or Authorization Server.
+
+Go to https://start.spring.io/ and add the next dependencies:
+
+1. Spring web
+
+2. Cloud OAuth2
+
+3. Open Feingn
+
+If you are using Maven please be sure that the next dependencies are in our pom.xml, and if you're using other project 
+management tool please verify that similar dependencies have been added
+
+```xml
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-oauth2</artifactId>
+</dependency>
+
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-web</artifactId>
+</dependency>
+
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-openfeign</artifactId>
+</dependency>
+```
+
+### Setup Feign Client
+
+The first step is retrieve the users and roles from the user-microservices, in order to do that we need to enable
+the Feign client in the spring boot main class adding @EnableFeignClients
+
+```java
+@SpringBootApplication
+@EnableFeignClients
+public class OauthMicroserviceApplication {
+	public static void main(String[] args) {
+		SpringApplication.run(OauthMicroserviceApplication.class, args);
+	}
+}
+```
+
+When that annotation is ready, we need to setup our Feign interface
+
+```java
+@FeignClient("user-service")
+public interface UserFeignClient {
+
+    @GetMapping("/users/search/searchByUsername")
+    User findByUsernmae(@RequestParam("username") String username);
+}
+```
+
+In this point is very likely that a problem appears, the entity User is not created in the OAuth Server Project, right?
+But we need that dependency in our application, in order to fix that you must follow the next steps:
+
+1. Go to your user-microservices application
+2. Run mvn clean install (The purpose is generate the Jar with the dependencies)
+3. Go to your user-microservices pom.xml file and identify the groupId, artifactId and version
+4. Go to your oauth-microservices pom.xml file and add a new dependency with the groupId, artifactId and version of the user-microservices
+
+With these steps the problems should be fixed.
+
+### Define Authentication Type
+
+Spring cloud offers several options for configuring user stores as:
+
+1. In memory-user store
+2. A jdbc-based user store
+3. A Ldap-backed user store
+4. A custom user details service.
+
+No matter which user store you choose, you can configure it by overriding a configure() method defined in the WebSecurityConfigurerAdapter
+configuration base class.
+
+For our current implementation we are going to use the User Details Service approach.
+ 
+In order to setup our kind of authentication we need to create a class that extends from WebSecurityConfigurerAdapter, 
+that class should look in the next way:
+
+```java
+@Configuration
+public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
+    
+    @Autowired
+    private UserDetailsService userDetailsService; // Pending for the next step
+
+    @Override
+    public void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth
+            .userDetailsService(this.userDetailsService)
+            .passwordEncoder(passwordEncoder());
+    }
+
+    @Bean
+    public BCryptPasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Override
+    @Bean
+    protected AuthenticationManager authenticationManager() throws Exception {
+        return super.authenticationManager();
+    }
+}
+```
+
+These are the important things to highlight in the above code:
+
+1. We marked this class as @Configuration
+2. We extends WebSecurityConfigurerAdapter 
+3. We override the method configure() and set the authentication way as userDetailsService()
+4. We created a bean with BCryptPasswordEncoder type (This is going to be used to encrypt the password)
+5. We set the passwordEncoder with the bean created in the step 4.
+
+### Create Authentication Service
+
+The authentication service is created with the task of let the OAuth server know who is requesting a JWT.
+
+Because we are getting this information from another microservice, we need to use the UserDetailsService interface from 
+spring cloud, if we want to use this interface we need to implement the method:
+
+```java
+UserDetails loadUserByUsername(String var1) throws UsernameNotFoundException;
+```
+
+So we are going to create a new class call it "UserDetails" that implements UserDetailsService from spring security.
+
+```java
+@Service
+public class UserDetails implements org.springframework.security.core.userdetails.UserDetailsService {
+    @Autowired
+    private UserFeignClient userFeignClient;
+
+    @Override
+    public org.springframework.security.core.userdetails.UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        User user = userFeignClient.findByUsernmae(username);
+        if(user == null) {
+            throw new UsernameNotFoundException("Error in login, the username does not exist in the system");
+        }
+        List<GrantedAuthority> authorities = user.getRoles()
+                .stream()
+                .map(role -> new SimpleGrantedAuthority(role.getName()))
+                .peek(authority-> log.info("Role: " + authority.getAuthority()))
+                .collect(Collectors.toList());
+        return new org.springframework.security.core.userdetails.User(
+                user.getUsername(),
+                user.getPassword(),
+                user.getEnabled(),
+                true,
+                true,
+                true,
+                authorities
+        );
+    }
+}
+```
+
+There a lot of thing happening in the above code:
+
+1. The class implements the loadUserByUsername method from UserDetailsService
+2. The class inject the feign client that we already created.
+3. The first step is to retrieve the User information using the username and the feign client.
+4. When we retrieve the User roles info, we have to map those roles to GrantedAuthority.
+5. When we retrieve the User info, we have to map that user to the User from Spring cloud.
+
+So in this step we basically are setting up our OAuth server in order to know who is requesting the JWT.
+
+### Authorization Server Config
+
+The last step is to finally setup our AuthorizationServer config, in this step is where the real "magic" happends.
+
+So we need to create a need class that extends from AuthorizationServerConfigurerAdapter
+
+```java
+@Configuration
+@EnableAuthorizationServer
+public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdapter {
+
+    @Autowired
+    private BCryptPasswordEncoder passwordEncoder;
+    @Autowired
+    private AuthenticationManager authenticationManager;
+    
+    private static final String password = "12345";
+
+    @Override
+    public void configure(AuthorizationServerSecurityConfigurer security) throws Exception {
+        security
+                .tokenKeyAccess("permitAll()")
+                .checkTokenAccess("isAuthenticated()");
+    }
+
+    @Override
+    public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
+        clients.inMemory()
+                .withClient("angular_front_end_app")
+                .secret(passwordEncoder.encode(password))
+                .scopes("read", "write")
+                .authorizedGrantTypes("password", "refresh_token")
+                .accessTokenValiditySeconds(3600)
+                .refreshTokenValiditySeconds(3600);
+    }
+
+    @Override
+    public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
+        endpoints.authenticationManager(authenticationManager)
+                .tokenStore(tokenStore())
+                .accessTokenConverter(accessTokenConverter());
+    }
+
+    @Bean
+    public JwtTokenStore tokenStore() {
+        return new JwtTokenStore(accessTokenConverter());
+    }
+
+    @Bean
+    public JwtAccessTokenConverter accessTokenConverter() {
+        JwtAccessTokenConverter tokenConverter = new JwtAccessTokenConverter();
+        tokenConverter.setSigningKey("some_secret_code");
+        return tokenConverter;
+    }
+}
+```
+
+As you can see the above class is kinda complex, so we are going to split it in order to explain it as much as we can.
+
+As initial thought please take into account that this class we need to marked with @Configuration and @EnableAuthorizationServer.  
+
+The second very important thing is that we need to override three methods from the AuthorizationServerConfigurerAdapter class.
+
+These are the three methods to override:
+
+```
+public class AuthorizationServerConfigurerAdapter implements AuthorizationServerConfigurer {
+    public AuthorizationServerConfigurerAdapter() {
+    }
+
+    public void configure(AuthorizationServerSecurityConfigurer security) throws Exception {
+    }
+
+    public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
+    }
+
+    public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
+    }
+}
+```
+
+### AuthorizationServerSecurityConfigurer
+
+In this method we are going to declare to trust in all the requests that call the /oauth/token endpoint with the
+"permitAll()" flag.
+
+
+```
+ @Override
+    public void configure(AuthorizationServerSecurityConfigurer security) throws Exception {
+        security
+            .tokenKeyAccess("permitAll()")
+            .checkTokenAccess("isAuthenticated()");
+    }
+```
+
+### AuthorizationServerEndpointsConfigurer
+
+In this method, we are going to setup the authentication manager(please keep in mid that the variable authenticationManager it was
+injected in this class) and also we are going to configure everything related with the token, as you can see we are returning
+a JWT with a signingKey as "some_secret_code"
+
+```java
+ @Override
+    public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
+        endpoints.authenticationManager(authenticationManager)
+                .tokenStore(tokenStore())
+                .accessTokenConverter(accessTokenConverter());
+    }
+
+    @Bean
+    public JwtTokenStore tokenStore() {
+        return new JwtTokenStore(accessTokenConverter());
+    }
+
+    @Bean
+    public JwtAccessTokenConverter accessTokenConverter() {
+        JwtAccessTokenConverter tokenConverter = new JwtAccessTokenConverter();
+        tokenConverter.setSigningKey("some_secret_code");
+        return tokenConverter;
+    }
+```
+
+### ClientDetailsServiceConfigurer
+
+This last method is the most important, because we are going to define here, which client are going to be able
+to use the authorization, the scopes, the grantTypes and also the duration of the token.
+
+```java
+  @Override
+    public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
+        clients.inMemory()
+                .withClient("angular_front_end_app")
+                .secret(passwordEncoder.encode(password))
+                .scopes("read", "write")
+                .authorizedGrantTypes("password", "refresh_token")
+                .accessTokenValiditySeconds(3600)
+                .refreshTokenValiditySeconds(3600);
+    }
+```
+
+When this setup is ready, we are going to be able to test our OAuthServer!.
+
+## Testing OAuthServer
+
+In order to test that our OAuth server is working as expected we need to follow the next steps:
+
+1. We are going to test using postmand, so please download it
+2. Create a new request pointing to the {server}:{port}/oauth/token
+3. Set up the Authorization as Basic Auth and put the client and password.
+4. Setup the body as x-www-form-urlencoded and add the username, password and grantype(this one as password).
+5. Send the request :)
+
+
+### Authorization setup example
+
+![](https://github.com/andresmontoyab/Spring/blob/master/resources/postman-security-authorization.PNG)
+
+### Body Example
+
+![](https://github.com/andresmontoyab/Spring/blob/master/resources/postman-security-body.PNG)
+
+### Results
+
+When the previous configuration is done, we just click in "Send"
+
+![](https://github.com/andresmontoyab/Spring/blob/master/resources/postman-security-jwt.PNG)
+
+And as you can see, there is our JWT!.
+
+
+
+
 

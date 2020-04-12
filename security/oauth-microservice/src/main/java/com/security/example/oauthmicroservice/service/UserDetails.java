@@ -1,13 +1,11 @@
-package com.serviceoauth.services;
+package com.security.example.oauthmicroservice.service;
 
-import com.commonsusers.models.entity.User;
-import com.serviceoauth.clients.UserFeignClient;
+import com.security.example.oauthmicroservice.clients.UserFeignClient;
+import com.security.example.usermicroservice.domain.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
@@ -15,23 +13,18 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-public class UserService implements UserDetailsService, IUserService {
+public class UserDetails implements org.springframework.security.core.userdetails.UserDetailsService {
 
-    private Logger log = LoggerFactory.getLogger(UserService.class);
+    private Logger log = LoggerFactory.getLogger(UserDetails.class);
 
     private final UserFeignClient userFeignClient;
 
-    public UserService(UserFeignClient userFeignClient) {
+    public UserDetails(UserFeignClient userFeignClient) {
         this.userFeignClient = userFeignClient;
     }
 
     @Override
-    public User findByUsernmae(String username) {
-        return userFeignClient.findByUsernmae(username);
-    }
-
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    public org.springframework.security.core.userdetails.UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userFeignClient.findByUsernmae(username);
 
         if(user == null) {
