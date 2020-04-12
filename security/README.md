@@ -9,7 +9,7 @@
         * [Signature](#Signature)
     * [OAuth 2.0](#OAuth-2.0)    
         * [Roles](#Roles)    
-        * [Protocol Endpoints](#Protocol Endpoints)    
+        * [Protocol Endpoints](#Protocol-Endpoints)    
         * [Scopes](#Scopes)    
         * [Grant Types](#Grant-Types)    
             * [Authorization Code](#Authorization-Code)
@@ -20,7 +20,7 @@
             * [Refresh](#Refresh)    
     * [Example](#Example)    
 		* [Creating API](#Creating-API)    
-		* [Create User Application](#Create User Application)    
+		* [Create User Application](#Create-User-Application)    
 		* [Create OAuthServer](#Create-OAuthServer)    
 			* [Setup Feign Client](#Setup-Feign-Client)    
 			* [Define Authentication Type](#Define-Authentication-Type)    
@@ -153,8 +153,7 @@ For instance we can define the next scopes in an application
 
 Now with this information in mind, we are going to apply the concepts that we saw in the previous sections:
 
-![](https://github.com/andresmontoyab/Spring/blob/master/resources/basic-security-spring.PNG)
-
+![](https://github.com/andresmontoyab/Spring/blob/master/resources/basic-security-spring.png)
 
 As we see in the above image we are going to make a real example using Spring framework with OAuth 2.0
 
@@ -581,7 +580,7 @@ The second very important thing is that we need to override three methods from t
 
 These are the three methods to override:
 
-```
+```java
 public class AuthorizationServerConfigurerAdapter implements AuthorizationServerConfigurer {
     public AuthorizationServerConfigurerAdapter() {
     }
@@ -603,7 +602,7 @@ In this method we are going to declare to trust in all the requests that call th
 "permitAll()" flag.
 
 
-```
+```java
  @Override
     public void configure(AuthorizationServerSecurityConfigurer security) throws Exception {
         security
@@ -672,11 +671,11 @@ In order to test that our OAuth server is working as expected we need to follow 
 
 ### Authorization setup example
 
-![](https://github.com/andresmontoyab/Spring/blob/master/resources/postman-security-authorization.PNG)
+![](https://github.com/andresmontoyab/Spring/blob/master/resources/postman-security-authorization.png)
 
 ### Body Example
 
-![](https://github.com/andresmontoyab/Spring/blob/master/resources/postman-security-body.PNG)
+![](https://github.com/andresmontoyab/Spring/blob/master/resources/postman-security-body.png)
 
 ### Results
 
