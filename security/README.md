@@ -530,6 +530,8 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
     private BCryptPasswordEncoder passwordEncoder;
     @Autowired
     private AuthenticationManager authenticationManager;
+    @Autowired
+    private UserDetailsService userDetailsService;
     
     private static final String password = "12345";
 
@@ -554,6 +556,7 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
     @Override
     public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
         endpoints.authenticationManager(authenticationManager)
+                .userDetailsService(userDetailsService)
                 .tokenStore(tokenStore())
                 .accessTokenConverter(accessTokenConverter());
     }
@@ -613,7 +616,7 @@ In this method we are going to declare to trust in all the requests that call th
 
 ### AuthorizationServerEndpointsConfigurer
 
-In this method, we are going to setup the authentication manager(please keep in mid that the variable authenticationManager it was
+In this method, we are going to setup the authentication manager(please keep in mid that the variables authenticationManager and userDetailsService were
 injected in this class) and also we are going to configure everything related with the token, as you can see we are returning
 a JWT with a signingKey as "some_secret_code"
 
@@ -621,6 +624,7 @@ a JWT with a signingKey as "some_secret_code"
  @Override
     public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
         endpoints.authenticationManager(authenticationManager)
+                .userDetailsService(userDetailsService)
                 .tokenStore(tokenStore())
                 .accessTokenConverter(accessTokenConverter());
     }

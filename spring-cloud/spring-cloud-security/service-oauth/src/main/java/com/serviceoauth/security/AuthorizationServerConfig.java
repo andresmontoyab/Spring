@@ -1,8 +1,11 @@
 package com.serviceoauth.security;
 
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.oauth2.config.annotation.configurers.ClientDetailsServiceConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerConfigurerAdapter;
@@ -22,12 +25,22 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
     private final BCryptPasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final AditionalTokenInfo aditionalTokenInfo;
-    private static final String password = "12345";
+    private final UserDetailsService userDetailsService;
 
-    public AuthorizationServerConfig(BCryptPasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, AditionalTokenInfo aditionalTokenInfo) {
+    @Value("${config.security.oauth.client.secret}")
+    private String clientSecret;
+
+    @Value("${config.security.oauth.client.id}")
+    private String clientId;
+
+    @Value("${config.security.oauth.jwt.key}")
+    private String jwtKey;
+
+    public AuthorizationServerConfig(BCryptPasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, AditionalTokenInfo aditionalTokenInfo, @Qualifier("customUserDetailsServer") UserDetailsService userDetailsService) {
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.aditionalTokenInfo = aditionalTokenInfo;
+        this.userDetailsService = userDetailsService;
     }
 
     @Override
@@ -40,15 +53,15 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
     @Override
     public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
         clients.inMemory()
-                .withClient("angular_front_end_app")
-                .secret(passwordEncoder.encode(password))
+                .withClient(clientId)
+                .secret(passwordEncoder.encode(clientSecret))
                 .scopes("read", "write")
                 .authorizedGrantTypes("password", "refresh_token")
                 .accessTokenValiditySeconds(3600)
                 .refreshTokenValiditySeconds(3600)
                 .and()
-                .withClient("postman_client")
-                .secret(passwordEncoder.encode(password))
+                .withClient(clientId)
+                .secret(passwordEncoder.encode(clientSecret))
                 .scopes("read", "write")
                 .authorizedGrantTypes("password", "refresh_token")
                 .accessTokenValiditySeconds(3600)
@@ -60,6 +73,7 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
         TokenEnhancerChain tokenEnhancerChain = new TokenEnhancerChain();
         tokenEnhancerChain.setTokenEnhancers(Arrays.asList(aditionalTokenInfo, accessTokenConverter()));
         endpoints.authenticationManager(authenticationManager)
+                .userDetailsService(userDetailsService)
                 .tokenStore(tokenStore())
                 .accessTokenConverter(accessTokenConverter())
                 .tokenEnhancer(tokenEnhancerChain);
@@ -73,7 +87,7 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
     @Bean
     public JwtAccessTokenConverter accessTokenConverter() {
         JwtAccessTokenConverter tokenConverter = new JwtAccessTokenConverter();
-        tokenConverter.setSigningKey("some_secret_code");
+        tokenConverter.setSigningKey(jwtKey);
         return tokenConverter;
     }
 }

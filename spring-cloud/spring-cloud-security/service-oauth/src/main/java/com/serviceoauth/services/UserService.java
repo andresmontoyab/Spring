@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Service
+@Service("customUserDetailsServer")
 public class UserService implements UserDetailsService, IUserService {
 
     private Logger log = LoggerFactory.getLogger(UserService.class);
