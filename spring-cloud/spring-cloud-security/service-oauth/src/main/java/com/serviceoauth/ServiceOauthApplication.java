@@ -1,5 +1,6 @@
 package com.serviceoauth;
 
+import brave.sampler.Sampler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -7,6 +8,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.context.annotation.Bean;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @SpringBootApplication
@@ -16,6 +18,11 @@ public class ServiceOauthApplication implements CommandLineRunner {
 
 	public static void main(String[] args) {
 		SpringApplication.run(ServiceOauthApplication.class, args);
+	}
+
+	@Bean
+	public Sampler defaultSampler(){
+		return Sampler.ALWAYS_SAMPLE;
 	}
 
 	@Autowired
@@ -29,4 +36,6 @@ public class ServiceOauthApplication implements CommandLineRunner {
 			System.out.println(passwordEncoded);
 		}
 	}
+
+
 }

@@ -30,11 +30,14 @@
                     * [Route](#Route)  
         * [Distributed Tracing](#Distributed-Tracing)
             * [Spring Cloud Sleuth](#Spring-Cloud-Sleuth)
+            * [Zipkin Distributed Tracing](#Zipkin-Distributed-Tracing)
+                * [Install Zipkins](#Install Zipkins)
+                * [Add Zipkins Dependency](#Add-Zipkins-Dependency)
+                * [Setup Sample](#Setup-Sample)
+                * [Zipkins Tags](#Zipkins-Tags)
+                * [Zipkins and RabbitMQ](#Zipkins and RabbitMQ)
         * [Fault Tolerance](#Fault-Tolerance)
             * [Hystrix](#Hystrix)
-        * [Spring Cloud Security](#Spring-Cloud-Security)
-                    
-            
     
 # Spring Cloud
 
@@ -777,28 +780,40 @@ If we want to achieve a Distributed Tracing System we neeed to assing a unique i
 </dependency>
 ```
 
-2. Create a Sampler 
-
-In our main class of the same microservices in where you put the previous dependency we need to create the next bean.
-
-```java
-@Bean
-public Sampler defaultSampler(){
-        return Sampler.ALWAYS_SAMPLE;
-}
-```
-
-When you finish the previous two steps you can run all the application with the change and you are going to note that for all the new request of those microservices a new an unique request id will be create it with the purpose of trace each call.
+When you finish the previous step you can run all the application with the change and you are going to note that for all the new 
+request of those microservices a new an unique request id will be create it with the purpose of trace each call.
 
 ## Zipkin Distributed Tracing
 
-In this point another challenges arises, as we could see in the previous step we can create a unique id per request, but know the question is, Where are we going to put the logs? Remember that we have a lot of microservices that means a lot of logs, one of the solution of this question is something that is called centralized log in where all the microservices are going to write their information. 
+In this point another challenges arises, as we could see in the previous step we can create a unique id per request, but know the question is,
+Where are we going to put the logs? Remember that we have a lot of microservices that means a lot of logs, one of the solution of this question
+is something that is called centralized log in where all the microservices are going to write their information. 
 
-## RabbitMQ
+In order to use zipkins, we need two steps. the first step is add the dependency in our pom.xml
 
-Connect microserves to rabbitmq with the zipkin config.
+### Install Zipkins
 
-First we need to add the dependency of sleuth-zipkin, this is require to log the information in the format that zipkin is expecting
+To install Zipkin server we need to follow the next steps:
+
+1. Go to https://zipkin.io/pages/quickstart
+
+2. Download the lastest release of the zipkin server (this is going to be a jar file)
+
+3. Run Zipkins using the next command
+
+```jshelllanguage
+java -jar {zipkins.jar.file}
+```
+
+Where an example of the zipkins jar file could be zipkin-server-2.16.1-exec.jar
+
+4. Open http://localhost:9411/zipkin/
+
+With the previous step we are going to have our zipkins server running in the port 9411.
+
+### Add Zipkins Dependency
+
+In every project that we want to log information into our zipkin server we need to add the next dependency.
 
 ```xml
 <dependency>
@@ -807,28 +822,69 @@ First we need to add the dependency of sleuth-zipkin, this is require to log the
 </dependency>
 ```
 
-Also is required the dependency of RabbitMQ in order to send the information to the zipkin server.
+### Setup Sample
 
+In every project that we want to log information into our zipkin server you must add a sampler as a @Bean
+
+```java
+@Bean
+public Sampler defaultSampler(){
+        return Sampler.ALWAYS_SAMPLE;
+}
 ```
+
+### Zipkins Tags
+
+Sometimes we want to add extra information in our zipkins server, in order to do that we can use tags, with this tool
+we can create custom message with the information that we want in the place that we require it.
+
+In order to use the Tags we need to use the Tracer class from brave library and inject this bean wherever we want to put the tag.
+
+Let's say that we have an autehntication service and we want to log in zipkins if the authentication was sucess or fail.    
+
+
+```java
+@org.springframework.stereotype.Service
+public class AuthenticationService {
+    
+    @org.springframework.beans.factory.annotation.Autowired
+    private brave.Tracer tracer;
+    
+    public boolean userCanAccess(User user) {
+        if (user.haveAccess()) {
+            tracer.currentSpan().tag("Authentication Sucess", "the user has access  to the appliaction");
+        } else {
+            tracer.currentSpan().tag("Authentication Fails", "the user has not access to the appliaction");
+        }
+    }
+}
+```
+
+### Zipkins and RabbitMQ
+
+Connect microserves to rabbitmq with the zipkin config.
+
+1. the first step is install and run RabbitMq (We are not going to explain the installion here.)
+
+2. Add the dependency in our microservices
+
+```xml
 <dependency>
     <groupId>org.springframework.amqp</groupId>
     <artifactId>spring-rabbit</artifactId>
 </dependency>
 ```
 
-To install Zipkin server we need to follow the next steps:
+3. Start zipkin server with rabbit setup
 
-1. Go to https://zipkin.io/pages/quickstart
+Now you have to install the zipkin server but you have to set the rabbit_addresses property in order to let zipkins know
+where is going to be listening our broker.
 
-2. Download the lastest release of the zipkin server
-
-3. In the folder that you put your jar use the next command in the CLI
-
-                1. SET RABBIT_URI=amqp://localhost
-                2. java -jar zipkin-server-2.16.1-exec.jar
-
-3. Open http://localhost:9411/zipkin/
-
+```cmd
+@echo off
+set RABBIT_ADDRESSES=localhost:5672
+java -jar zipkin-server-2.16.1-exec.jar
+```
 
 # Fault Tolerance
 
@@ -921,24 +977,3 @@ public Item timeOutMethod() {
 
 With the above code, every time that a timeout happens the timeOutMethod is going to be called.
 
-## Spring Security
-
-IS security framework, deals with authetication and authorization
-
-## JWT
-
-Json Web Token
-
-Is an open standard, to implement security in our application based in REST.
-
-In JWT you can create and verify if the JWT is valid or not.
-
-jwt.io -> In this page we can check a basic JWT.
-
-A JWT is built in three parts.
-
-Header.
-Payload
-Verify Signature.
-
-## OAuth
