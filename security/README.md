@@ -26,7 +26,8 @@
 			* [Define Authentication Type](#Define-Authentication-Type)    
 			* [Create Authentication Service](#Create-Authentication-Service)    
 			* [Authorization Server Config](#Authorization-Server-Config)    
-		* [Testing OAuthServer](#Testing-OAuthServer)    
+		* [Testing OAuthServer](#Testing-OAuthServer)
+		* [Protecting API](#Protecting-API)     
 
 # Security
 
@@ -689,7 +690,87 @@ When the previous configuration is done, we just click in "Send"
 
 And as you can see, there is our JWT!.
 
+## Protecting API
 
+After we setup our Authorization Server is not to configure our resource server, or the API.
+
+### Add OAuth2.0 Dependency
+
+First thing that we want to do is add the dependency in our API
+
+```xml
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-oauth2</artifactId>
+</dependency>
+```
+
+### ResourceServer Class
+
+After add the dependency we are going to setup a resource server configuration class in where we are going to setup all the
+configuration for the OAuth2.0 implementation in the Protected Resources.
+
+```java
+@Configuration
+@EnableResourceServer
+public class ResourceServerConfig extends ResourceServerConfigurerAdapter {
+
+    @Override
+    public void configure(ResourceServerSecurityConfigurer resources) throws Exception {
+        //
+    }
+
+    @Override
+    public void configure(HttpSecurity http) throws Exception {
+        //
+    }
+}
+```
+
+As you can see in the above code, if we want to create our resource server configuration class we need to follow the next steps:
+
+1. Mark the class as @Configuration
+2. Mark the class as @EnableResourceServer
+3. Extends the class ResourceServerConfigurerAdapter
+4. Implement the both configure methods.
+
+### ResourceServerSecurityConfigurer
+
+This is the first method that we must implement in order to setup up our resource server and is the easy one, basically
+in this method we are going to setup the logic decoded our incoming JWT to json an verified if is a valid JWT.
+
+```java
+@Configuration
+@EnableResourceServer
+public class ResourceServerConfig extends ResourceServerConfigurerAdapter {
+
+    @Value("${config.security.oauth.jwt.key}")
+    private String jwtKey;
+    
+
+    @Override
+    public void configure(ResourceServerSecurityConfigurer resources) throws Exception {
+            resources.tokenStore(tokenStore());
+    }
+
+    @Override
+    public void configure(HttpSecurity http) throws Exception {
+        // not yet
+    }
+    
+    @Bean
+    public JwtTokenStore tokenStore() {
+        return new JwtTokenStore(accessTokenConverter());
+    }
+    
+    @Bean
+    public JwtAccessTokenConverter accessTokenConverter() {
+        JwtAccessTokenConverter tokenConverter = new JwtAccessTokenConverter();
+        tokenConverter.setSigningKey(jwtKey); // Same key Authorization server
+        return tokenConverter;
+    }
+}
+```
 
 
 
