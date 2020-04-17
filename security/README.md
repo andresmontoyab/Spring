@@ -27,7 +27,16 @@
 			* [Create Authentication Service](#Create-Authentication-Service)    
 			* [Authorization Server Config](#Authorization-Server-Config)    
 		* [Testing OAuthServer](#Testing-OAuthServer)
-		* [Protecting API](#Protecting-API)     
+		* [Protecting API](#Protecting-API)   
+		    * [Add OAuth2.0 Dependency](#Add-OAuth2.0-Dependency)   
+		    * [ResourceServer Class](#ResourceServer-Class)   
+		        * [ResourceServerSecurityConfigurer](#ResourceServerSecurityConfigurer)   
+		        * [HttpSecurity](#HttpSecurity)   
+		        * [HttpSecurity with CORS](#HttpSecurity-with-CORS)
+        * [Testing Protected API](#Testing-Protected-API)
+            * [Unprotected resources](#Unprotected-resources)
+            * [Protected resources](#Protected-resources)
+		  
 
 # Security
 
@@ -868,11 +877,11 @@ As you can see in the above code we need to create some beans in order to config
 2. Create a CorsConfigurationSource bean in where we specified which domains, http methods and headers are allowed.
 3. Create a FilterRegistrationBean<CorsFilter> in order to apply the corst configuration globally.
 
-## Testing Protected API.
+## Testing Protected API
 
 This is the final part of this section ans basically we are going to test that our security implementation is working as expected.
 
-### Checking unprotected resources
+### Unprotected resources
 
 As you can remember there are some endpoint that are available to all the public, example :  "/api/users/users"
 
@@ -883,7 +892,7 @@ In the above images we can notice the next points:
 1. We are not using any kind of authorization.
 2. The response from the server is 200.
 
-### Checking protected resources
+### Protected resources
 
 This is the most important part, there are protected end points like /api/users/users/{id} in where we need a JWT with the correct
 roles in order to call it. 
