@@ -737,7 +737,11 @@ As you can see in the above code, if we want to create our resource server confi
 ### ResourceServerSecurityConfigurer
 
 This is the first method that we must implement in order to setup up our resource server and is the easy one, basically
-in this method we are going to setup the logic decoded our incoming JWT to json an verified if is a valid JWT.
+in this method we are going to setup the logic to decoded our incoming JWT to json and verify if is a valid JWT.
+
+In order to do that we have to use the same jwtKey, JwtTokenStore and JwtAccessTokenConverter that we used in 
+our Authorization Server, so if you compare this information in both (Authorization and Protected API) project must do
+exactly the same. 
 
 ```java
 @Configuration
@@ -772,5 +776,138 @@ public class ResourceServerConfig extends ResourceServerConfigurerAdapter {
 }
 ```
 
+### HttpSecurity
 
+In this method we are going to setup which endpoints  are we going to protect and also which roles are required in order to use
+the protected apis.
 
+```java
+@Configuration
+@EnableResourceServer
+public class ResourceServerConfig extends ResourceServerConfigurerAdapter {
+    
+
+    @Override
+    public void configure(ResourceServerSecurityConfigurer resources) throws Exception {
+            // Already explained
+    }
+
+    @Override
+    public void configure(HttpSecurity http) throws Exception {
+         http.authorizeRequests()
+                        .antMatchers(HttpMethod.POST, "/api/security/oauth/**").permitAll()
+                        .antMatchers(HttpMethod.GET, "/api/products", "/api/items", "/api/users/users" ).permitAll() 
+                        .antMatchers(HttpMethod.GET, "/api/users/users/{id}", "/api/products/{id}",
+                                "/api/items/{id}/amount/{amount}").hasAnyRole("ADMIN", "USER")
+                        .antMatchers(HttpMethod.POST, "/api/products/create", "/api/items/create", "/api/users/users").hasRole("ADMIN")
+                        .antMatchers(HttpMethod.PUT, "/api/products/update/{id}", "/api/items/update/{id}", "/api/users/users/{id}").hasRole("ADMIN")
+                        .antMatchers(HttpMethod.DELETE , "/api/products/delete/{id}", "/api/items/delete/{id}", "/api/users/users/{id}").hasRole("ADMIN")
+                        .anyRequest().authenticated();
+    }
+}
+```
+
+So as we can see in the previous code there are some open api and also some protected resources.
+
+1. The antMatchers is a rule that is going to be applied to the api that match with HttpMethod and also the url
+2. As you can see the /api/security/oauth/** is open to everyone, because in this api we are going to ask for JWT.
+3. There is a method call hasAnyRole in where we can say that this api is going to be open for multiples roles
+4. There is a method call hasRole in where the api is going to be available only for one role.
+5. Finally the ".anyRequest().authenticated()" means that if there is another request that doesn't match with the previous rules
+this request must be authenticated. 
+
+### HttpSecurity with CORS
+
+One last thing to take into account is the CORS configuration, this is require when we want to call our resource server from a 
+client that is outside of our domain, in order to setup CORS we can follow the next steps.
+
+```java
+@Configuration
+@EnableResourceServer
+public class ResourceServerConfig extends ResourceServerConfigurerAdapter {
+    
+
+    @Override
+    public void configure(ResourceServerSecurityConfigurer resources) throws Exception {
+            // Already explained
+    }
+
+    @Override
+    public void configure(HttpSecurity http) throws Exception {
+         http.authorizeRequests()
+                        .antMatchers(HttpMethod.POST, "/api/security/oauth/**").permitAll()
+                        .antMatchers(HttpMethod.GET, "/api/products", "/api/items", "/api/users/users" ).permitAll() 
+                        .anyRequest().authenticated()
+                        .and().cors().configurationSource(corsConfigurationSource());;
+    }
+    
+        @Bean
+        public CorsConfigurationSource corsConfigurationSource() {
+            CorsConfiguration corsConfiguration = new CorsConfiguration();
+            corsConfiguration.setAllowedOrigins(Arrays.asList("*")); // Let all the origin
+            corsConfiguration.setAllowedMethods(Arrays.asList("POST", "GET", "PUT", "DELETE", "OPTIONS"));
+            corsConfiguration.setAllowCredentials(true);
+            corsConfiguration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
+            UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+            source.registerCorsConfiguration("/**", corsConfiguration);
+            return source;
+        }
+    
+        @Bean
+        public FilterRegistrationBean<CorsFilter> corsFilter() {
+            FilterRegistrationBean<CorsFilter> bean = new FilterRegistrationBean<CorsFilter>(new CorsFilter(corsConfigurationSource()));
+            bean.setOrder(Ordered.HIGHEST_PRECEDENCE);
+            return bean;
+        }
+}
+```
+
+As you can see in the above code we need to create some beans in order to configure our CORS:
+
+1. Add the configurationSource() method in our configure method.
+2. Create a CorsConfigurationSource bean in where we specified which domains, http methods and headers are allowed.
+3. Create a FilterRegistrationBean<CorsFilter> in order to apply the corst configuration globally.
+
+## Testing Protected API.
+
+This is the final part of this section ans basically we are going to test that our security implementation is working as expected.
+
+### Checking unprotected resources
+
+As you can remember there are some endpoint that are available to all the public, example :  "/api/users/users"
+
+![](https://github.com/andresmontoyab/Spring/blob/master/resources/unprotected-resource.png)
+
+In the above images we can notice the next points:
+
+1. We are not using any kind of authorization.
+2. The response from the server is 200.
+
+### Checking protected resources
+
+This is the most important part, there are protected end points like /api/users/users/{id} in where we need a JWT with the correct
+roles in order to call it. 
+
+Let's first try to call this endpoint without any kind of authorization.
+
+![](https://github.com/andresmontoyab/Spring/blob/master/resources/protected-resource-without-jwt.png)
+
+As you can see in the previous image, in this case we are not able to get into the resource because is protected and we are 
+not using any kind of authorization.
+
+Now, let's try to call the same endpoint but using one admin JWT.
+
+The first step is retrieve the JWT from our OAuth Server, in order to create please go to 
+the section [Testing OAuthServer](#Testing-OAuthServer)
+
+When we have ready our JWT token, we are going to add an authorization in our request.
+
+![](https://github.com/andresmontoyab/Spring/blob/master/resources/protected-resource-with-jwt.png)
+
+Finally as you can see above we are able to get into our protected server using our JWT, in order to achieved that please follow
+the next steps.
+
+1. Generate the JWT with the correct roles.
+2. Setup the authorization as Bearer Token
+3. Put your token in the "token" section
+4. Send the request
