@@ -36,6 +36,7 @@
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-zipkin</artifactId>
+			<version>1.0.0.RELEASE</version>
 		</dependency>
 
 		<dependency>
