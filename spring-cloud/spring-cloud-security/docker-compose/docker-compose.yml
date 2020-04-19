@@ -51,7 +51,7 @@ services:
   zuul-api-gateway:
       image: zuul-api-gateway:v1
       restart: always
-      port:
+      ports:
         - "8090:8090"
       networks:
         - spring
