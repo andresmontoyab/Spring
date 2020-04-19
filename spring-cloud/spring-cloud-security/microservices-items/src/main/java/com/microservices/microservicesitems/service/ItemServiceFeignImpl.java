@@ -3,6 +3,7 @@ package com.microservices.microservicesitems.service;
 import com.microservices.microservicesitems.domain.Item;
 import com.spring.commons.appcommons.models.entity.Product;
 import com.microservices.microservicesitems.feign.FeignClientProducts;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
