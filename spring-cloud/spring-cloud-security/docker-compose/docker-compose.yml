@@ -1,14 +1,14 @@
 version: '3.7'
 services:
   config-server:
-    image: config-server
+    image: config-server:v1
     ports:
       - "8888:8888"
     restart: always
     networks:
       - spring
   eureka-server:
-      image: eureka-server
+      image: eureka-server:v1
       ports:
         - "8761:8761"
       restart: always
