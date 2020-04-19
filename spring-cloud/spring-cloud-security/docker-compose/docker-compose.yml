@@ -30,6 +30,36 @@ services:
       depends_on:
         - config-server
         - eureka-server
+        - microservices-products
+  microservices-user:
+      image: microservices-user:v1
+      restart: always
+      networks:
+        - spring
+      depends_on:
+        - config-server
+        - eureka-server
+  service-oauth:
+      image: service-oauth:v1
+      restart: always
+      networks:
+        - spring
+      depends_on:
+        - config-server
+        - eureka-server
+        - microservices-user
+  zuul-api-gateway:
+      image: zuul-api-gateway:v1
+      restart: always
+      port:
+        - "8090:8090"
+      networks:
+        - spring
+      depends_on:
+        - config-server
+        - eureka-server
+        - microservices-item
+        - microservices-products
 networks:
   spring:
     
