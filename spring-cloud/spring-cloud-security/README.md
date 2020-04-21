@@ -10,7 +10,7 @@ In order to run this project you must need maven and docker and follow the next 
 mvn clean install -DskipTests
 ```
 
-2. After build all the jars, we need to create all the docker using the next command in the root of each project:
+2. After build all the jars, we need to create all the docker images using the next command in the root of each project:
 
 ```jshelllanguage}
 docker build -t tag-name:version .
