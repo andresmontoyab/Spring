@@ -92,10 +92,10 @@ public class CourseRepository {
         Course anotherCourse = new Course("Another course");
         entityManager.persist(anotherCourse);
 
-        entityManager.flush();
+        //entityManager.flush();
 
         entityManager.clear();
-//        entityManager.detach(course);
+        //entityManager.detach(course);
 //        entityManager.detach(anotherCourse);
         anotherCourse.setName("Another course - Updated");
         course.setName("New course Example - Updated");  // Because this is a transanction every single change in the app is going to update the database too, so is not require to call merge.

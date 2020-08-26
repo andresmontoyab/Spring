@@ -40,7 +40,6 @@ public class StudentRepository {
     }
 
     public void deleteById(Integer id) {
-        "hola".toLowerCase().startsWith()
         Student student = findById(id); // I need to get the object first
         entityManager.remove(student); // The auto generated id.
     }
